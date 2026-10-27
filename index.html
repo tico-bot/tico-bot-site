@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ranking — Tico Bot</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="index.css" />
+  <link rel="stylesheet" href="ios-glass.css" />
+</head>
+<body>
+
+<!-- ══════════ NAV ══════════ -->
+<nav class="top-nav">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-brand">
+      <div class="nav-brand-mark">T</div>
+      <span class="nav-brand-name">Tico Bot</span>
+    </a>
+    <ul class="nav-links">
+      <li>
+        <a href="index.html" class="active">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          <span>Ranking</span>
+        </a>
+      </li>
+      <li>
+        <a href="perfil.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <span>Meu Perfil</span>
+        </a>
+      </li>
+      <li>
+        <a href="cassino.html" id="nav-cassino" style="display:none">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+          <span>Cassino</span>
+        </a>
+      </li>
+      <li>
+        <a href="corrida.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12h18M3 6l9 6-9 6"/></svg>
+          <span>Corrida</span>
+        </a>
+      </li>
+      <li>
+        <a href="admin.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2l2.09 6.26H21l-5.47 3.97 2.09 6.26L12 14.52l-5.62 3.97 2.09-6.26L3 8.26h6.91z"/></svg>
+          <span>Admin</span>
+        </a>
+      </li>
+      
+    </ul>
+  </div>
+</nav>
+
+<!-- barra fina que enche durante o ciclo de atualização automática (modo "ao vivo") -->
+<div class="live-progress-track" aria-hidden="true"><div class="live-progress" id="live-progress"></div></div>
+
+<!-- ══════════ HERO ══════════ -->
+<section class="hero">
+  <p class="hero-eyebrow">Tico Bot · Temporada Atual</p>
+  <h1 class="hero-title">Hall da Fama</h1>
+  <p class="hero-sub">Os guerreiros mais ativos do grupo — atualizado em tempo real.</p>
+
+  <!-- traço de pulso: assinatura visual da página, reforça a ideia de "vivo" -->
+  <div class="pulse-line" aria-hidden="true">
+    <svg viewBox="0 0 600 60" preserveAspectRatio="none">
+      <path d="M0,30 L140,30 L155,8 L170,52 L185,30 L600,30" />
+    </svg>
+  </div>
+
+  <div class="hero-stats">
+    <div class="stat-pill"><strong id="stat-total">—</strong><span>jogadores</span></div>
+    <div class="stat-pill"><strong id="stat-groups">—</strong><span>grupos</span></div>
+    <div class="stat-pill"><strong id="stat-msgs">—</strong><span>mensagens</span></div>
+    <div class="stat-pill"><strong id="stat-updated">—</strong><span>atualizado</span></div>
+  </div>
+
+  <a href="cassino.html" class="cassino-card" id="cassino-card" style="display:none">
+    <span class="cassino-card-icon">🎰</span>
+    <div class="cassino-card-text">
+      <strong>Cassino</strong>
+      <span>Aposte seu gold nos slots</span>
+    </div>
+    <span class="cassino-card-arrow">›</span>
+  </a>
+
+  <button class="live-badge" id="live-badge" type="button" title="Ativar atualização automática a cada 30s">
+    <span class="live-dot"></span>
+    <span id="live-label">Ativar ao vivo</span>
+  </button>
+</section>
+
+<!-- ══════════ TABS ══════════ -->
+<div class="tabs-wrap">
+  <div class="tabs-row">
+    <button class="tab-btn active" data-tab="global">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+      Ranking Global
+      <span class="tab-count" id="tab-count-global"></span>
+    </button>
+    <button class="tab-btn" data-tab="grupo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Ranking por Grupo
+      <span class="tab-count" id="tab-count-grupo"></span>
+    </button>
+  </div>
+</div>
+
+<!-- ══════════ MAIN ══════════ -->
+<main>
+
+  <!-- ── GLOBAL ── -->
+  <div class="tab-panel active" id="tab-global">
+
+    <div class="controls-bar">
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="search-global" placeholder="Buscar jogador…" autocomplete="off" />
+        <kbd>/</kbd>
+      </div>
+      <div class="sort-group" role="group" aria-label="Ordenar por">
+        <button class="sort-chip active" data-tab="global" data-sort="xp">XP</button>
+        <button class="sort-chip" data-tab="global" data-sort="gold">Gold</button>
+        <button class="sort-chip" data-tab="global" data-sort="mensagens">Msgs</button>
+      </div>
+    </div>
+
+    <div class="podium" id="podium-global"></div>
+    <div class="ranking-meta">
+      <p class="ranking-meta-label" id="meta-label-global">Top <strong id="global-count">—</strong> jogadores globais</p>
+      <button class="refresh-btn" id="refresh-global">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.59"/></svg>
+        Atualizar
+      </button>
+    </div>
+    <div class="ranking-list" id="list-global">
+      <div class="skeleton-row"><div class="skeleton" style="width:28px;height:18px"></div><div class="skeleton" style="width:40px;height:40px;border-radius:50%"></div><div style="flex:1"><div class="skeleton" style="width:60%;height:14px;margin-bottom:5px"></div><div class="skeleton" style="width:40%;height:11px"></div></div><div class="skeleton" style="width:60px;height:18px"></div></div>
+      <div class="skeleton-row"><div class="skeleton" style="width:28px;height:18px"></div><div class="skeleton" style="width:40px;height:40px;border-radius:50%"></div><div style="flex:1"><div class="skeleton" style="width:50%;height:14px;margin-bottom:5px"></div><div class="skeleton" style="width:35%;height:11px"></div></div><div class="skeleton" style="width:60px;height:18px"></div></div>
+      <div class="skeleton-row"><div class="skeleton" style="width:28px;height:18px"></div><div class="skeleton" style="width:40px;height:40px;border-radius:50%"></div><div style="flex:1"><div class="skeleton" style="width:55%;height:14px;margin-bottom:5px"></div><div class="skeleton" style="width:30%;height:11px"></div></div><div class="skeleton" style="width:60px;height:18px"></div></div>
+      <div class="skeleton-row"><div class="skeleton" style="width:28px;height:18px"></div><div class="skeleton" style="width:40px;height:40px;border-radius:50%"></div><div style="flex:1"><div class="skeleton" style="width:45%;height:14px;margin-bottom:5px"></div><div class="skeleton" style="width:38%;height:11px"></div></div><div class="skeleton" style="width:60px;height:18px"></div></div>
+      <div class="skeleton-row"><div class="skeleton" style="width:28px;height:18px"></div><div class="skeleton" style="width:40px;height:40px;border-radius:50%"></div><div style="flex:1"><div class="skeleton" style="width:65%;height:14px;margin-bottom:5px"></div><div class="skeleton" style="width:42%;height:11px"></div></div><div class="skeleton" style="width:60px;height:18px"></div></div>
+    </div>
+  </div>
+
+  <!-- ── POR GRUPO ── -->
+  <div class="tab-panel" id="tab-grupo">
+    <div class="group-filter">
+      <label for="grupo-select">Grupo:</label>
+      <div class="group-select-wrap">
+        <select id="grupo-select">
+          <option value="">Carregando grupos…</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="group-meta" id="group-meta"></div>
+
+    <div class="controls-bar">
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="search-grupo" placeholder="Buscar jogador…" autocomplete="off" />
+        <kbd>/</kbd>
+      </div>
+      <div class="sort-group" role="group" aria-label="Ordenar por">
+        <button class="sort-chip active" data-tab="grupo" data-sort="xp">XP</button>
+        <button class="sort-chip" data-tab="grupo" data-sort="gold">Gold</button>
+        <button class="sort-chip" data-tab="grupo" data-sort="mensagens">Msgs</button>
+      </div>
+    </div>
+
+    <div class="podium" id="podium-grupo"></div>
+    <div class="ranking-meta">
+      <p class="ranking-meta-label" id="meta-label-grupo">Top <strong id="grupo-count">—</strong> do grupo</p>
+      <button class="refresh-btn" id="refresh-grupo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.59"/></svg>
+        Atualizar
+      </button>
+    </div>
+    <div class="ranking-list" id="list-grupo">
+      <div class="state-box">
+        <span class="glyph">$ select group --filter ranking</span>
+        <h4>Selecione um grupo acima</h4>
+        <p>O ranking do grupo vai aparecer aqui.</p>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- ══════════ MODAL DO USUÁRIO ══════════ -->
+<div class="modal-overlay" id="modal-overlay" role="dialog" aria-modal="true">
+  <div class="modal-card" id="modal-card">
+    <button class="modal-close" id="modal-close" title="Fechar">✕</button>
+
+    <div class="modal-header">
+      <div class="modal-avatar" id="modal-avatar"></div>
+      <div class="modal-user-info">
+  <div class="modal-name" id="modal-name">—</div>
+  <div class="modal-rank-badge" id="modal-rank-badge">— 🏆</div>
+  <div class="modal-telefone" id="modal-telefone"></div>
+</div>
+    </div>
+
+    <div class="modal-stats">
+  <div class="modal-stat">
+    <span class="modal-stat-label">Nível</span>
+    <span class="modal-stat-val" id="modal-level">—</span>
+  </div>
+  <div class="modal-stat">
+    <span class="modal-stat-label">XP Total</span>
+    <span class="modal-stat-val purple" id="modal-xp">—</span>
+  </div>
+  <div class="modal-stat">
+    <span class="modal-stat-label">Mensagens</span>
+    <span class="modal-stat-val" id="modal-msgs">—</span>
+  </div>
+  <div class="modal-stat">
+    <span class="modal-stat-label">Gold</span>
+    <span class="modal-stat-val gold" id="modal-gold">—</span>
+  </div>
+  <div class="modal-stat">
+    <span class="modal-stat-label">Ranking</span>
+    <span class="modal-stat-val mint" id="modal-pos">—</span>
+  </div>
+  <div class="modal-stat">
+    <span class="modal-stat-label">Grupos</span>
+    <span class="modal-stat-val" id="modal-grupos-count">—</span>
+  </div>
+</div>
+    <div class="modal-xp-label">
+      <span id="modal-xp-pct">XP para o próximo nível</span>
+      <span id="modal-xp-next"></span>
+    </div>
+    <div class="modal-xp-bar-outer">
+      <div class="modal-xp-bar-inner" id="modal-xp-bar" style="width:0%"></div>
+    </div>
+
+    <div class="modal-grupos" id="modal-grupos" style="display:none">
+      <div class="modal-grupos-title">Grupos</div>
+      <div class="modal-grupos-list" id="modal-grupos-list"></div>
+    </div>
+
+    <div class="modal-actions">
+      <a href="perfil.html" class="modal-btn modal-btn-primary" id="modal-perfil-link">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        Ver Perfil
+      </a>
+      <button class="modal-btn modal-btn-secondary" id="modal-copy-btn" title="Copiar ID do usuário">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        Copiar ID
+      </button>
+      <button class="modal-btn modal-btn-secondary" id="modal-close-btn">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<footer>Tico-bot · hall da fama · powered by Node.js + MongoDB</footer>
+
+<!-- ══════════ JS ══════════ -->
+<script>
+  const API = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? 'http://localhost:3000/api'
+    : 'https://whatsappbot2-130c.onrender.com/api';
+
+  (function checkTokenAutoLogin() {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('token');
+    if (token) {
+      fetch(`${API}/auth/token`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token }),
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.jwt) {
+            localStorage.setItem('jwt', data.jwt);
+            sessionStorage.setItem('piro_jwt', data.jwt);
+            const cleanUrl = window.location.origin + window.location.pathname;
+            window.history.replaceState({}, document.title, cleanUrl);
+            window.location.reload();
+          }
+        })
+        .catch(err => console.error('Erro no auto-login:', err));
+    }
+  })();
+
+  /* ══════════════════════════════════
+     UTILS
+  ══════════════════════════════════ */
+  let toastTimer;
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    if (!t) return;
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
+  }
+
+  function fmtXP(n) {
+    if (n == null) return '—';
+    if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M';
+    if (n >= 1_000)     return (n / 1_000).toFixed(1) + 'k';
+    return String(n);
+  }
+
+  function fmtNum(n) {
+    return n != null ? n.toLocaleString('pt-BR') : '—';
+  }
+
+  // Formata o valor de acordo com o critério de ordenação ativo (xp / gold / mensagens)
+  function fmtMetric(u, field) {
+    const val = u?.[field] ?? 0;
+    if (field === 'gold')      return fmtNum(val) + ' 💰';
+    if (field === 'mensagens') return fmtNum(val) + ' msgs';
+    return fmtXP(val) + ' XP';
+  }
+
+  function initials(nome) {
+    if (!nome || typeof nome !== 'string') return '?';
+    const clean = nome.trim().replace(/[^\w\s]/gu, '').trim();
+    if (!clean) return nome.slice(0, 2).toUpperCase();
+    const parts = clean.split(/\s+/);
+    return parts.length >= 2
+      ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+      : clean.slice(0, 2).toUpperCase();
+  }
+
+  function timeAgo(date) {
+    if (!date) return 'agora';
+    const diff = Math.floor((Date.now() - new Date(date)) / 1000);
+    if (diff < 60)    return 'agora';
+    if (diff < 3600)  return `${Math.floor(diff / 60)}min atrás`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}h atrás`;
+    return `${Math.floor(diff / 86400)}d atrás`;
+  }
+
+  function escapeHtml(str) {
+    return String(str).replace(/[&<>"']/g, c => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+    }[c]));
+  }
+
+  // remove acentos para busca tolerante ("joao" encontra "João")
+  function normalize(str) {
+    return String(str).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  }
+
+  // destaca o trecho buscado dentro do nome
+  function highlightMatch(nome, rawQuery) {
+    const safeName = escapeHtml(nome);
+    if (!rawQuery) return safeName;
+    const idx = nome.toLowerCase().indexOf(rawQuery.toLowerCase());
+    if (idx === -1) return safeName;
+    return escapeHtml(nome.slice(0, idx)) +
+           '<mark>' + escapeHtml(nome.slice(idx, idx + rawQuery.length)) + '</mark>' +
+           escapeHtml(nome.slice(idx + rawQuery.length));
+  }
+
+  // Replica a fórmula de nível do bot: level = floor((xp/100)^(1/1.5)) + 1
+  function computeLevelProgress(xp) {
+    const x = xp ?? 0;
+    const level = Math.max(1, Math.floor(Math.pow(x / 100, 1 / 1.5)) + 1);
+    const xpParaProximo = Math.ceil(100 * Math.pow(level, 1.5));
+    const xpInicioNivel = Math.ceil(100 * Math.pow(Math.max(0, level - 1), 1.5));
+    const xpNoNivel = xpParaProximo - xpInicioNivel;
+    const pct = xpNoNivel > 0
+      ? Math.min(100, Math.max(0, Math.floor(((x - xpInicioNivel) / xpNoNivel) * 100)))
+      : 100;
+    return { level, xpParaProximo, xpInicioNivel, pct };
+  }
+
+  // anima um número subindo até o valor alvo — blindado contra elemento ausente
+  function countUp(el, target, duration = 800) {
+    if (!el) return;
+    if (target == null || isNaN(target)) { el.textContent = '—'; return; }
+    const start = Number(el.dataset.raw) || 0;
+    const t0 = performance.now();
+    function tick(now) {
+      const p = Math.min(1, (now - t0) / duration);
+      const eased = 1 - Math.pow(1 - p, 3);
+      const val = Math.round(start + (target - start) * eased);
+      el.textContent = fmtNum(val);
+      el.dataset.raw = val;
+      if (p < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }
+
+  // pega elemento por id com segurança — usado em todo lugar sensível
+  function $(id) { return document.getElementById(id); }
+
+  /* ══════════════════════════════════
+     ESTADO
+  ══════════════════════════════════ */
+  const state = {
+    global: { raw: [], sort: 'xp', query: '', total: 0 },
+    grupo:  { raw: [], sort: 'xp', query: '', total: 0 },
+  };
+  let gruposCache = [];
+  let currentModalUser = null;
+  let lastUpdateTime = null;
+
+  // travas para impedir requisições concorrentes (clique duplo no "Atualizar")
+  let globalLoading = false;
+  let grupoLoading = false;
+
+  /* ── Tabs ── */
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      $('tab-' + btn.dataset.tab)?.classList.add('active');
+    });
+  });
+
+  /* ══════════════════════════════════
+     MODAL
+  ══════════════════════════════════ */
+  const modalOverlay = $('modal-overlay');
+
+  function openModal(user, pos) {
+    if (!user) return;
+    currentModalUser = user;
+    const nome = user.nome || 'Anônimo';
+    if ($('modal-avatar'))      $('modal-avatar').textContent = initials(nome);
+    if ($('modal-name'))        $('modal-name').textContent   = nome;
+    if ($('modal-rank-badge'))  $('modal-rank-badge').textContent = `#${pos} no ranking`;
+
+    const prog = computeLevelProgress(user.xp);
+
+    if ($('modal-level')) $('modal-level').textContent = user.level ?? prog.level;
+    if ($('modal-xp'))    $('modal-xp').textContent    = fmtXP(user.xp ?? 0);
+    if ($('modal-msgs'))  $('modal-msgs').textContent  = fmtNum(user.mensagens ?? 0);
+    if ($('modal-gold'))  $('modal-gold').textContent  = fmtNum(user.gold ?? 0);
+    if ($('modal-pos'))   $('modal-pos').textContent   = `#${pos}`;
+
+    const idRaw = user.idWhatsApp || '';
+    const telEl = $('modal-telefone');
+    if (telEl) {
+      if (idRaw.endsWith('@lid')) {
+        telEl.textContent = 'Carregando...';
+      } else {
+        const telefoneExibir = idRaw.replace('@s.whatsapp.net', '').replace(/\D/g, '');
+        telEl.textContent = telefoneExibir ? `+${telefoneExibir}` : '';
+      }
+    }
+
+    if ($('modal-grupos-count')) $('modal-grupos-count').textContent = '…';
+
+    if ($('modal-xp-pct'))  $('modal-xp-pct').textContent  = `${prog.pct}% para nível ${prog.level + 1}`;
+    if ($('modal-xp-next')) $('modal-xp-next').textContent = `${fmtXP(prog.xpParaProximo)} XP`;
+
+    const bar = $('modal-xp-bar');
+    if (bar) {
+      bar.style.width = '0%';
+      requestAnimationFrame(() => setTimeout(() => { bar.style.width = prog.pct + '%'; }, 80));
+    }
+
+    modalOverlay?.classList.add('open');
+    document.body.style.overflow = 'hidden';
+
+    const gruposEl    = $('modal-grupos');
+    const gruposListEl = $('modal-grupos-list');
+    if (gruposEl && gruposListEl && user.idWhatsApp) {
+      gruposEl.style.display = 'none';
+      gruposListEl.innerHTML = '';
+      const jwt = sessionStorage.getItem('piro_jwt') || localStorage.getItem('jwt');
+
+      // Resolve telefone de @lid independente do JWT
+      if (telEl && idRaw.endsWith('@lid')) {
+        telEl.textContent = 'Carregando...';
+        fetch(`${API}/user/telefone/${encodeURIComponent(idRaw)}`)
+          .then(r => r.json())
+          .then(d => { if (d.telefone) telEl.textContent = `+${d.telefone}`; })
+          .catch(() => { telEl.textContent = ''; });
+      }
+
+      if (!jwt) {
+        if ($('modal-grupos-count')) $('modal-grupos-count').textContent = '—';
+        return;
+      }
+      fetch(`${API}/user/grupos/${encodeURIComponent(user.idWhatsApp)}`, {
+        headers: { 'Authorization': `Bearer ${jwt}` }
+      })
+        .then(r => r.json())
+        .then(data => {
+          if (!data.grupos?.length) {
+            if ($('modal-grupos-count')) $('modal-grupos-count').textContent = '0';
+            return;
+          }
+          gruposEl.style.display = 'block';
+          if ($('modal-grupos-count')) $('modal-grupos-count').textContent = data.grupos.length;
+
+          gruposListEl.innerHTML = data.grupos.map(g => `
+            <div class="modal-grupo-item">
+              <span class="modal-grupo-nome">${escapeHtml(g.nome)}</span>
+              <span class="modal-grupo-gold">${fmtNum(g.gold)} 💰</span>
+            </div>
+          `).join('');
+        })
+        .catch(() => {
+          if ($('modal-grupos-count')) $('modal-grupos-count').textContent = '—';
+        });
+    }
+  }
+
+  function closeModal() {
+    modalOverlay?.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  $('modal-close')?.addEventListener('click', closeModal);
+  $('modal-close-btn')?.addEventListener('click', closeModal);
+  modalOverlay?.addEventListener('click', e => { if (e.target === modalOverlay) closeModal(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && modalOverlay?.classList.contains('open')) closeModal(); });
+
+  $('modal-copy-btn')?.addEventListener('click', async () => {
+    if (!currentModalUser) return;
+    const u = currentModalUser;
+    const idRaw = u.idWhatsApp || '';
+    const telefone = idRaw.replace('@s.whatsapp.net', '').replace('@lid', '');
+    const copiavel = idRaw.includes('@lid') ? idRaw : telefone;
+    try {
+      await navigator.clipboard.writeText(copiavel);
+      showToast('ID copiado: ' + copiavel);
+    } catch {
+      showToast('Não foi possível copiar.');
+    }
+  });
+
+  /* ══════════════════════════════════
+     PÓDIO
+  ══════════════════════════════════ */
+  function renderPodium(top3, containerId, metricField) {
+    const container = $(containerId);
+    if (!container) return;
+    if (!top3 || top3.length === 0) { container.innerHTML = ''; return; }
+
+    const medals  = ['🥇', '🥈', '🥉'];
+    const classes = ['first', 'second', 'third'];
+
+    container.innerHTML = top3.map((u, i) => `
+      <div class="podium-slot ${classes[i]}" data-pos="${i + 1}" tabindex="0" role="button" aria-label="Ver perfil de ${escapeHtml(u.nome || 'Anônimo')}">
+        <div class="podium-avatar">
+          <div class="podium-avatar-inner">${initials(u.nome)}</div>
+          <span class="podium-medal">${medals[i]}</span>
+        </div>
+        <div class="podium-name">${escapeHtml(u.nome || 'Anônimo')}</div>
+        <div class="podium-xp">${fmtMetric(u, metricField)}</div>
+        <div class="podium-bar">${i + 1}º</div>
+      </div>
+    `).join('');
+
+    container.querySelectorAll('.podium-slot').forEach((el, i) => {
+      const pos = top3[i].posicao ?? (i + 1);
+      el.addEventListener('click', () => openModal(top3[i], pos));
+      el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') openModal(top3[i], pos); });
+    });
+  }
+
+  /* ══════════════════════════════════
+     LISTA — modo normal (posições 4+)
+  ══════════════════════════════════ */
+  function renderList(ranking, listId, metricField, maxValue) {
+    const list = $(listId);
+    if (!list) return;
+    if (!ranking || ranking.length === 0) {
+      list.innerHTML = `<div class="state-box">
+        <span class="glyph">$ query ranking — 0 results</span>
+        <h4>Nenhum resultado</h4>
+        <p>Ainda não há dados suficientes.</p>
+      </div>`;
+      return;
+    }
+
+    const max = maxValue || ranking[0]?.[metricField] || 1;
+    const items = ranking.slice(3);
+
+    if (items.length === 0) { list.innerHTML = ''; return; }
+
+    list.innerHTML = items.map((u, i) => {
+      const pos      = u.posicao ?? (i + 4);
+      const posClass = pos <= 3 ? `top${pos}` : '';
+      const pct      = Math.max(4, Math.floor(((u[metricField] ?? 0) / max) * 100));
+      const nome     = u.nome || 'Anônimo';
+
+      return `
+        <div class="rank-row ${posClass}"
+             style="animation-delay:${Math.min(i, 20) * 20}ms"
+             data-index="${i}"
+             tabindex="0"
+             role="button"
+             aria-label="Ver detalhes de ${escapeHtml(nome)}, posição ${pos}">
+          <span class="rank-pos">${pos}</span>
+          <div class="rank-avatar">${initials(nome)}</div>
+          <div class="rank-info">
+            <div class="rank-name">${escapeHtml(nome)}</div>
+            <div class="rank-sub">${fmtNum(u.mensagens)} msgs</div>
+            <div class="rank-bar-wrap">
+              <div class="rank-bar" style="width:${pct}%"></div>
+            </div>
+          </div>
+          <div class="rank-right">
+            <div class="rank-xp">${fmtMetric(u, metricField)}</div>
+            <div class="rank-level">Nível ${u.level ?? '—'}</div>
+          </div>
+          <span class="rank-arrow">›</span>
+        </div>`;
+    }).join('');
+
+    list.querySelectorAll('.rank-row').forEach((el, i) => {
+      const user = items[i];
+      const pos  = user.posicao ?? (i + 4);
+      el.addEventListener('click', () => openModal(user, pos));
+      el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') openModal(user, pos); });
+    });
+  }
+
+  /* ══════════════════════════════════
+     LISTA — modo busca (mostra todos os resultados, com a posição real)
+  ══════════════════════════════════ */
+  function renderSearchList(filtered, listId, metricField, maxValue, rawQuery) {
+    const list = $(listId);
+    if (!list) return;
+    if (!filtered || filtered.length === 0) {
+      list.innerHTML = `<div class="state-box">
+        <span class="glyph">$ query ranking --name "${escapeHtml(rawQuery)}" — 0 results</span>
+        <h4>Ninguém encontrado</h4>
+        <p>Tente outro nome ou confira a ortografia.</p>
+      </div>`;
+      return;
+    }
+
+    const max = maxValue || 1;
+
+    list.innerHTML = filtered.map(u => {
+      const pos      = u.posicao;
+      const posClass = pos <= 3 ? `top${pos}` : '';
+      const pct      = Math.max(4, Math.floor(((u[metricField] ?? 0) / max) * 100));
+      const nome     = u.nome || 'Anônimo';
+
+      return `
+        <div class="rank-row ${posClass}"
+             tabindex="0"
+             role="button"
+             aria-label="Ver detalhes de ${escapeHtml(nome)}, posição ${pos}">
+          <span class="rank-pos">${pos}</span>
+          <div class="rank-avatar">${initials(nome)}</div>
+          <div class="rank-info">
+            <div class="rank-name">${highlightMatch(nome, rawQuery)}</div>
+            <div class="rank-sub">${fmtNum(u.mensagens)} msgs</div>
+            <div class="rank-bar-wrap">
+              <div class="rank-bar" style="width:${pct}%"></div>
+            </div>
+          </div>
+          <div class="rank-right">
+            <div class="rank-xp">${fmtMetric(u, metricField)}</div>
+            <div class="rank-level">Nível ${u.level ?? '—'}</div>
+          </div>
+          <span class="rank-arrow">›</span>
+        </div>`;
+    }).join('');
+
+    list.querySelectorAll('.rank-row').forEach((el, i) => {
+      const user = filtered[i];
+      el.addEventListener('click', () => openModal(user, user.posicao));
+      el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') openModal(user, user.posicao); });
+    });
+  }
+
+  /* ══════════════════════════════════
+     RENDER GERAL DE UMA ABA (aplica sort + busca sobre o dado já carregado)
+  ══════════════════════════════════ */
+  function renderTab(tab) {
+    const s = state[tab];
+    const sorted = [...s.raw]
+      .sort((a, b) => (b[s.sort] ?? 0) - (a[s.sort] ?? 0))
+      .map((u, i) => ({ ...u, posicao: i + 1 }));
+
+    const podiumId = 'podium-' + tab;
+    const listId   = 'list-' + tab;
+    const metaEl   = $('meta-label-' + tab);
+    const query    = s.query.trim();
+
+    if (query) {
+      const podiumEl = $(podiumId);
+      if (podiumEl) podiumEl.innerHTML = '';
+      const q = normalize(query);
+      const filtered = sorted.filter(u => normalize(u.nome || 'Anônimo').includes(q));
+      if (metaEl) metaEl.innerHTML = `<strong>${filtered.length}</strong> resultado(s) para "${escapeHtml(query)}"`;
+      renderSearchList(filtered, listId, s.sort, sorted[0]?.[s.sort], query);
+    } else {
+      const totalLabel = s.total || sorted.length;
+      if (metaEl) {
+        metaEl.innerHTML = tab === 'global'
+          ? `Top <strong>${sorted.length}</strong> de <strong>${totalLabel}</strong> jogadores globais`
+          : `Top <strong>${sorted.length}</strong> de <strong>${totalLabel}</strong> do grupo`;
+      }
+      renderPodium(sorted.slice(0, 3), podiumId, s.sort);
+      renderList(sorted, listId, s.sort, sorted[0]?.[s.sort]);
+    }
+  }
+
+  /* ── Controles: busca e ordenação ── */
+  ['global', 'grupo'].forEach(tab => {
+    const input = $('search-' + tab);
+    if (!input) return;
+    input.addEventListener('input', () => {
+      state[tab].query = input.value;
+      renderTab(tab);
+    });
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Escape') {
+        input.value = '';
+        state[tab].query = '';
+        renderTab(tab);
+        input.blur();
+      }
+    });
+  });
+
+  document.querySelectorAll('.sort-chip').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const tab  = btn.dataset.tab;
+      const sort = btn.dataset.sort;
+      state[tab].sort = sort;
+      document.querySelectorAll(`.sort-chip[data-tab="${tab}"]`).forEach(b => b.classList.toggle('active', b === btn));
+      renderTab(tab);
+    });
+  });
+
+  // atalho "/" foca a busca da aba ativa
+  document.addEventListener('keydown', e => {
+    if (e.key === '/' && !['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName)) {
+      e.preventDefault();
+      const activePanel = document.querySelector('.tab-panel.active');
+      if (!activePanel) return;
+      const activeTab = activePanel.id.replace('tab-', '');
+      $('search-' + activeTab)?.focus();
+    }
+  });
+
+  /* ══════════════════════════════════
+     FETCH — RANKING GLOBAL
+  ══════════════════════════════════ */
+  async function loadGlobalRanking(silent) {
+    if (globalLoading) return; // evita corrida de cliques duplos
+    globalLoading = true;
+
+    const btn = $('refresh-global');
+    btn?.classList.add('spinning');
+
+    try {
+      const res = await fetch(`${API}/user/ranking`);
+
+      // a API pode responder com corpo não-JSON em cold start/erro do Render
+      let data;
+      try {
+        data = await res.json();
+      } catch {
+        throw new Error('Resposta inválida do servidor (provavelmente acordando — tente de novo em alguns segundos).');
+      }
+
+      if (!res.ok) throw new Error(data?.error || `Erro na API (${res.status})`);
+
+      const { ranking, total, totalMensagens, atualizadoEm } = data;
+      state.global.raw = Array.isArray(ranking) ? ranking : [];
+      state.global.total = total ?? state.global.raw.length;
+
+      countUp($('stat-total'), total ?? 0);
+      countUp($('stat-msgs'), totalMensagens ?? 0);
+      if ($('tab-count-global')) $('tab-count-global').textContent = fmtNum(total ?? 0);
+
+      lastUpdateTime = atualizadoEm ? new Date(atualizadoEm) : new Date();
+      if ($('stat-updated')) $('stat-updated').textContent = timeAgo(lastUpdateTime);
+
+      renderTab('global');
+      if (silent) showToast('Ranking global atualizado');
+
+    } catch (err) {
+      console.error(err);
+      const list = $('list-global');
+      if (list) {
+        list.innerHTML = `
+          <div class="state-box">
+            <span class="glyph">$ fetch /api/user/ranking — ERR</span>
+            <h4>Não foi possível carregar</h4>
+            <p>${escapeHtml(err.message)}</p>
+            <button class="refresh-btn retry-btn" id="retry-global-btn">Tentar novamente</button>
+          </div>`;
+        $('retry-global-btn')?.addEventListener('click', () => loadGlobalRanking());
+      }
+      showToast('Erro ao carregar ranking global');
+    } finally {
+      btn?.classList.remove('spinning');
+      globalLoading = false;
+    }
+  }
+
+  /* ══════════════════════════════════
+     FETCH — GRUPOS
+  ══════════════════════════════════ */
+  async function loadGrupos() {
+    const sel = $('grupo-select');
+    try {
+      const res  = await fetch(`${API}/grupos`);
+      const data = await res.json();
+
+      if (!sel) return;
+
+      if (!res.ok || !data.grupos?.length) {
+        sel.innerHTML = '<option value="">Nenhum grupo disponível</option>';
+        countUp($('stat-groups'), 0);
+        return;
+      }
+
+      gruposCache = data.grupos;
+      sel.innerHTML = '<option value="">Selecione um grupo…</option>' +
+        gruposCache.map(g => `<option value="${escapeHtml(g.jid)}">${escapeHtml(g.nome || g.jid)}</option>`).join('');
+
+      countUp($('stat-groups'), gruposCache.length);
+
+    } catch {
+      if (sel) sel.innerHTML = '<option value="">Não foi possível carregar grupos</option>';
+      countUp($('stat-groups'), 0);
+    }
+  }
+
+  /* ══════════════════════════════════
+     FETCH — RANKING POR GRUPO
+  ══════════════════════════════════ */
+  async function loadGrupoRanking(jid, silent) {
+    if (!jid || grupoLoading) return;
+    grupoLoading = true;
+
+    const btn  = $('refresh-grupo');
+    const list = $('list-grupo');
+    const pod  = $('podium-grupo');
+
+    btn?.classList.add('spinning');
+
+    if (!silent && list && pod) {
+      pod.innerHTML = '';
+      list.innerHTML = [1,2,3,4,5].map(() => `
+        <div class="skeleton-row">
+          <div class="skeleton" style="width:28px;height:18px"></div>
+          <div class="skeleton" style="width:40px;height:40px;border-radius:50%"></div>
+          <div style="flex:1">
+            <div class="skeleton" style="width:55%;height:14px;margin-bottom:5px"></div>
+            <div class="skeleton" style="width:35%;height:11px"></div>
+          </div>
+          <div class="skeleton" style="width:60px;height:18px"></div>
+        </div>`).join('');
+    }
+
+    try {
+      const res = await fetch(`${API}/user/ranking/grupo?jid=${encodeURIComponent(jid)}`);
+
+      let data;
+      try {
+        data = await res.json();
+      } catch {
+        throw new Error('Resposta inválida do servidor (provavelmente acordando — tente de novo em alguns segundos).');
+      }
+
+      if (!res.ok) throw new Error(data?.error || `Erro na API (${res.status})`);
+
+      const { ranking, total } = data;
+      state.grupo.raw = Array.isArray(ranking) ? ranking : [];
+      state.grupo.total = total ?? state.grupo.raw.length;
+
+      const info = gruposCache.find(g => g.jid === jid);
+      if (info) {
+        if ($('tab-count-grupo')) $('tab-count-grupo').textContent = fmtNum(info.membros ?? total ?? 0);
+        const meta = $('group-meta');
+        if (meta) {
+          meta.classList.add('show');
+          meta.innerHTML = `
+            <span>👥 <strong>${fmtNum(info.membros)}</strong> membros</span>
+            <span>⚡ <strong>${fmtXP(info.xpTotal)}</strong> XP total no grupo</span>`;
+        }
+      }
+
+      renderTab('grupo');
+      if (silent) showToast('Ranking do grupo atualizado');
+
+      lastUpdateTime = new Date();
+      if ($('stat-updated')) $('stat-updated').textContent = timeAgo(lastUpdateTime);
+
+    } catch (err) {
+      if (pod) pod.innerHTML = '';
+      if (list) {
+        list.innerHTML = `
+          <div class="state-box">
+            <span class="glyph">$ fetch /api/user/ranking/grupo — ERR</span>
+            <h4>Não foi possível carregar</h4>
+            <p>${escapeHtml(err.message)}</p>
+            <button class="refresh-btn retry-btn" id="retry-grupo-btn">Tentar novamente</button>
+          </div>`;
+        $('retry-grupo-btn')?.addEventListener('click', () => loadGrupoRanking(jid));
+      }
+      showToast('Erro ao carregar ranking do grupo');
+    } finally {
+      btn?.classList.remove('spinning');
+      grupoLoading = false;
+    }
+  }
+
+  /* ══════════════════════════════════
+     MODO "AO VIVO" — atualização automática a cada 30s
+  ══════════════════════════════════ */
+  const LIVE_MS    = 30000;
+  const liveBadge  = $('live-badge');
+  const liveLabel  = $('live-label');
+  const liveBar    = $('live-progress');
+  let liveActive   = false;
+  let liveTimer    = null;
+
+  async function refreshActiveTab() {
+    const activePanel = document.querySelector('.tab-panel.active');
+    if (!activePanel) return;
+    const activeTab = activePanel.id.replace('tab-', '');
+    if (activeTab === 'global') {
+      await loadGlobalRanking(true);
+    } else {
+      const jid = $('grupo-select')?.value;
+      if (jid) await loadGrupoRanking(jid, true);
+    }
+  }
+
+  function cycleLive() {
+    if (!liveBar) return;
+    liveBar.style.transition = 'none';
+    liveBar.style.width = '0%';
+    void liveBar.offsetWidth; // força reflow para reiniciar a animação
+    liveBar.style.transition = `width ${LIVE_MS}ms linear`;
+    liveBar.style.width = '100%';
+
+    liveTimer = setTimeout(async () => {
+      if (!liveActive) return;
+      await refreshActiveTab();
+      if (liveActive) cycleLive();
+    }, LIVE_MS);
+  }
+
+  function startLive() {
+    liveActive = true;
+    liveBadge?.classList.add('active');
+    if (liveLabel) liveLabel.textContent = 'Ao vivo';
+    cycleLive();
+  }
+
+  function stopLive() {
+    liveActive = false;
+    liveBadge?.classList.remove('active');
+    if (liveLabel) liveLabel.textContent = 'Ativar ao vivo';
+    clearTimeout(liveTimer);
+    if (liveBar) {
+      liveBar.style.transition = 'none';
+      liveBar.style.width = '0%';
+    }
+  }
+
+  liveBadge?.addEventListener('click', () => liveActive ? stopLive() : startLive());
+
+  // mantém o "atualizado há Xmin" vivo mesmo sem refetch
+  setInterval(() => {
+    if (lastUpdateTime && $('stat-updated')) $('stat-updated').textContent = timeAgo(lastUpdateTime);
+  }, 20000);
+
+  /* ── Eventos ── */
+  $('refresh-global')?.addEventListener('click', () => loadGlobalRanking());
+
+  $('refresh-grupo')?.addEventListener('click', () => {
+    const jid = $('grupo-select')?.value;
+    jid ? loadGrupoRanking(jid) : showToast('Selecione um grupo primeiro');
+  });
+
+  $('grupo-select')?.addEventListener('change', e => {
+    $('group-meta')?.classList.remove('show');
+    if (e.target.value) loadGrupoRanking(e.target.value);
+  });
+
+  /* ── Init ── */
+  loadGlobalRanking();
+  loadGrupos();
+
+  // Mostra nav-cassino e card do cassino se estiver logado
+  if (sessionStorage.getItem('piro_jwt')) {
+    const navCassino = document.getElementById('nav-cassino');
+    const cassinoCard = document.getElementById('cassino-card');
+    if (navCassino) navCassino.style.display = 'flex';
+    if (cassinoCard) cassinoCard.style.display = 'flex';
+  }
+</script>
+</body>
+</html>
