@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Meu Perfil — Tico Bot</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="index.css" />
+  <link rel="stylesheet" href="perfil.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="ios-glass.css" />
+</head>
+<body>
+
+  <nav class="top-nav">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-brand">
+        <div class="nav-brand-mark">T</div>
+        <span class="nav-brand-name">Tico Bot</span>
+      </a>
+      <ul class="nav-links">
+        <li>
+          <a href="index.html">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            <span>Ranking</span>
+          </a>
+        </li>
+        <li>
+          <a href="perfil.html" class="active">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <span>Meu Perfil</span>
+          </a>
+        </li>
+        <li>
+          <a href="cassino.html" id="nav-cassino">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+            <span>Cassino</span>
+          </a>
+        </li>
+        <li>
+          <a href="corrida.html">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12h18M3 6l9 6-9 6"/></svg>
+            <span>Corrida</span>
+          </a>
+        </li>
+        <li>
+          <a href="admin.html">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2l2.09 6.26H21l-5.47 3.97 2.09 6.26L12 14.52l-5.62 3.97 2.09-6.26L3 8.26h6.91z"/></svg>
+            <span>Admin</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- ── LOADING (skeleton) ── -->
+  <div id="tela-loading" class="hidden" style="max-width:880px;margin:0 auto;padding:2rem 1.25rem;">
+    <div style="display:flex;align-items:center;gap:1.5rem;margin-bottom:2rem;padding-bottom:2rem;border-bottom:1px solid var(--border);">
+      <div class="skeleton skeleton-avatar"></div>
+      <div style="flex:1;">
+        <div class="skeleton skeleton-line lg" style="margin-bottom:10px;"></div>
+        <div class="skeleton skeleton-line sm"></div>
+      </div>
+      <div style="display:flex;gap:0.6rem;flex-wrap:wrap;">
+        <div class="skeleton skeleton-pill"></div>
+        <div class="skeleton skeleton-pill"></div>
+        <div class="skeleton skeleton-pill"></div>
+        <div class="skeleton skeleton-pill"></div>
+      </div>
+    </div>
+    <div class="skeleton skeleton-chart" style="margin-bottom:1rem;"></div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.75rem;margin-bottom:2rem;">
+      <div class="skeleton skeleton-card"></div>
+      <div class="skeleton skeleton-card"></div>
+      <div class="skeleton skeleton-card"></div>
+    </div>
+    <div class="skeleton skeleton-chart"></div>
+  </div>
+
+  <!-- ── ERRO ── -->
+  <div id="tela-erro" class="erro-wrap hidden">
+    <div class="erro-card">
+      <div class="erro-icon">⚠️</div>
+      <h2 id="erro-msg">Algo deu errado</h2>
+      <p>Faça login novamente para continuar.</p>
+      <a href="login.html" class="btn-secondary">← Ir para o login</a>
+    </div>
+  </div>
+
+  <!-- ── PAINEL PRINCIPAL ── -->
+  <main id="painel" class="hidden">
+
+    <!-- HEADER -->
+    <section class="perfil-header">
+      <div class="perfil-header-inner">
+        <div class="avatar" id="avatar-iniciais"></div>
+        <div class="perfil-info">
+          <h1 id="perfil-nome">—</h1>
+          <p class="perfil-numero" id="perfil-numero">—</p>
+          <p class="perfil-bio hidden" id="perfil-bio"></p>
+        </div>
+        <div class="perfil-acoes">
+          <button onclick="sairConta()" class="btn-acao btn-sair">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            Sair
+          </button>
+          <button onclick="apagarConta()" class="btn-acao btn-apagar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+            Apagar conta
+          </button>
+        </div>
+        <div class="perfil-stats-topo">
+          <div class="stat-pill" style="align-items:flex-start;">
+            <span class="stat-label">Nível</span>
+            <span class="stat-val" id="stat-level" style="display:flex;flex-direction:column;"></span>
+          </div>
+          <div class="stat-pill">
+            <span class="stat-label">XP Total</span>
+            <span class="stat-val neon-roxo" id="stat-xp">—</span>
+          </div>
+          <div class="stat-pill">
+            <span class="stat-label">Gold</span>
+            <span class="stat-val neon-gold" id="stat-gold">—</span>
+          </div>
+          <div class="stat-pill">
+            <span class="stat-label">Ranking</span>
+            <span class="stat-val" id="stat-rank">—</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- XP & PROGRESSO -->
+    <section class="secao">
+      <h2 class="secao-titulo">⚡ XP &amp; Progresso</h2>
+      <div class="progresso-wrap">
+        <div class="progresso-info">
+          <span id="xp-atual-txt">0 XP</span>
+          <span id="xp-prox-txt">Próx. nível: 0 XP</span>
+        </div>
+        <div class="barra-outer">
+          <div class="barra-inner" id="barra-xp" style="width:0%"></div>
+        </div>
+      </div>
+      <div class="chart-box">
+        <canvas id="chart-xp"></canvas>
+      </div>
+    </section>
+
+    <!-- ATIVIDADE SEMANAL -->
+    <section class="secao">
+      <h2 class="secao-titulo">📊 Atividade Semanal</h2>
+      <div class="chart-box chart-box--sm">
+        <canvas id="chart-atividade"></canvas>
+      </div>
+      <div class="cards-atividade">
+        <div class="act-card">
+          <span class="act-label">💬 Mensagens</span>
+          <span class="act-val" id="act-mensagens">—</span>
+        </div>
+        <div class="act-card">
+          <span class="act-label">🧠 Quiz Points</span>
+          <span class="act-val neon-roxo" id="act-quiz">—</span>
+        </div>
+        <div class="act-card">
+          <span class="act-label">🐾 Pet</span>
+          <span class="act-val neon-mint" id="act-pet">—</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- GRUPOS -->
+    <section class="secao" id="secao-grupos">
+      <h2 class="secao-titulo">🏘️ Meus Grupos</h2>
+      <div id="grupos-grid" class="grupos-grid"></div>
+      <div id="grupos-vazio" class="inventario-vazio hidden">
+        <p>😶 Você ainda não participa de nenhum grupo registrado.</p>
+      </div>
+    </section>
+
+    <!-- RELACIONAMENTO -->
+    <section class="secao" id="secao-relacionamento">
+      <h2 class="secao-titulo">💑 Relacionamento</h2>
+      <div id="rel-conteudo"></div>
+    </section>
+
+    <!-- PET -->
+<section class="secao">
+  <h2 class="secao-titulo">🐾 Meu Pet</h2>
+  <div id="pet-card"></div>
+  <div id="pet-vazio" class="inventario-vazio hidden">
+    <p>🥚 Você ainda não tem um pet.<br/>Use <strong>!capturar</strong> no grupo para conseguir um!</p>
+  </div>
+</section>
+
+  </main>
+
+  <footer class="footer">
+    Tico Bot &copy; 2025 &mdash; feito com 🔥
+  </footer>
+
+  <script>
+    const API = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+      ? 'http://localhost:3000/api'
+      : 'https://whatsappbot2-130c.onrender.com/api';
+
+    (function checkTokenAutoLogin() {
+      const params = new URLSearchParams(window.location.search);
+      const token = params.get('token');
+      if (token) {
+        fetch(`${API}/auth/token`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token }),
+        })
+          .then(res => res.json())
+          .then(data => {
+            if (data.jwt) {
+              localStorage.setItem('jwt', data.jwt);
+              sessionStorage.setItem('piro_jwt', data.jwt);
+              const cleanUrl = window.location.origin + window.location.pathname;
+              window.history.replaceState({}, document.title, cleanUrl);
+              window.location.reload();
+            }
+          })
+          .catch(err => console.error('Erro no auto-login:', err));
+      }
+    })();
+
+    const $    = id => document.getElementById(id);
+    const show = id => $(id).classList.remove('hidden');
+    const hide = id => $(id).classList.add('hidden');
+
+    function iniciais(nome) {
+      if (!nome || typeof nome !== 'string') return '??';
+      const limpo = nome.trim().replace(/[^\p{L}\s]/gu, '').trim();
+      if (!limpo) return nome.slice(0, 2).toUpperCase();
+      const partes = limpo.split(/\s+/);
+      return partes.length >= 2
+        ? (partes[0][0] + partes[partes.length - 1][0]).toUpperCase()
+        : limpo.slice(0, 2).toUpperCase();
+    }
+
+    function corAvatar(nome) {
+      const paleta = [
+        { bg: 'rgba(184,85,255,0.12)',  border: '#b855ff', text: '#b855ff', glow: 'rgba(184,85,255,0.35)' },
+        { bg: 'rgba(0,255,176,0.10)',   border: '#00ffb0', text: '#00ffb0', glow: 'rgba(0,255,176,0.30)'  },
+        { bg: 'rgba(255,208,96,0.10)',  border: '#ffd060', text: '#ffd060', glow: 'rgba(255,208,96,0.30)' },
+        { bg: 'rgba(96,165,255,0.12)',  border: '#60a5ff', text: '#60a5ff', glow: 'rgba(96,165,255,0.30)' },
+        { bg: 'rgba(255,100,130,0.11)', border: '#ff6482', text: '#ff6482', glow: 'rgba(255,100,130,0.30)'},
+        { bg: 'rgba(80,220,160,0.10)',  border: '#50dca0', text: '#50dca0', glow: 'rgba(80,220,160,0.30)' },
+      ];
+      const str = nome || '?';
+      const idx = [...str].reduce((acc, c) => acc + c.charCodeAt(0), 0) % paleta.length;
+      return paleta[idx];
+    }
+
+    function fmtNum(n) {
+      if (n == null) return '0';
+      if (n >= 1e9) return (n / 1e9).toFixed(1).replace(/\.0$/, '') + 'B';
+      if (n >= 1e6) return (n / 1e6).toFixed(1).replace(/\.0$/, '') + 'M';
+      if (n >= 1e3) return (n / 1e3).toFixed(1).replace(/\.0$/, '') + 'k';
+      return n.toLocaleString('pt-BR');
+    }
+
+    function fmtItemNome(chave) {
+      return chave
+        .replace(/_/g, ' ')
+        .replace(/\b\w/g, l => l.toUpperCase());
+    }
+
+    function fmtData(iso) {
+      if (!iso) return null;
+      return new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
+    }
+
+    function escapeHtml(str) {
+      return String(str ?? '').replace(/[&<>"']/g, c => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+      }[c]));
+    }
+
+    let chartXP        = null;
+    let chartAtividade = null;
+
+    const CHART_FONT = { family: "'Inter', sans-serif", size: 11 };
+    const CHART_GRID = '#1a1b2e';
+    const CHART_TICK = '#5a5f72';
+
+    function renderChartXP(xpHistory) {
+      if (chartXP) { chartXP.destroy(); chartXP = null; }
+      const hoje   = new Date();
+      const labels = [];
+      const dados  = [];
+      for (let i = 29; i >= 0; i--) {
+        const d    = new Date(hoje);
+        d.setDate(d.getDate() - i);
+        const chave = d.toISOString().slice(0, 10);
+        const [ano, mes, dia] = chave.split('-').map(Number);
+        const nomesMes = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+        labels.push(`${dia} ${nomesMes[mes - 1]}`);
+        const val = xpHistory[chave] ?? 0;
+        dados.push(val >= 1 ? Math.round(val) : 0);
+      }
+      chartXP = new Chart($('chart-xp').getContext('2d'), {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [{
+            label: 'XP ganho',
+            data: dados,
+            borderColor: '#b855ff',
+            backgroundColor: ctx => {
+              const g = ctx.chart.ctx.createLinearGradient(0, 0, 0, 220);
+              g.addColorStop(0, 'rgba(184,85,255,0.22)');
+              g.addColorStop(1, 'rgba(184,85,255,0)');
+              return g;
+            },
+            pointBackgroundColor: '#b855ff',
+            pointBorderColor: '#07080d',
+            pointBorderWidth: 2,
+            pointRadius: 3.5,
+            pointHoverRadius: 6,
+            tension: 0.45,
+            fill: true,
+            borderWidth: 2,
+          }],
+        },
+        options: {
+          responsive: true,
+          animation: { duration: 900, easing: 'easeOutQuart' },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: '#13141f',
+              borderColor: '#b855ff',
+              borderWidth: 1,
+              titleColor: '#e8eaf0',
+              bodyColor: '#b855ff',
+              padding: 10,
+              callbacks: { label: ctx => ` ${fmtNum(ctx.raw)} XP` },
+            },
+          },
+          scales: {
+            x: { ticks: { color: CHART_TICK, font: CHART_FONT, maxTicksLimit: 8 }, grid: { color: CHART_GRID } },
+            y: { ticks: { color: CHART_TICK, font: CHART_FONT }, grid: { color: CHART_GRID }, beginAtZero: true },
+          },
+        },
+      });
+    }
+
+    function renderChartAtividade(atividadeSemanal) {
+      if (chartAtividade) { chartAtividade.destroy(); chartAtividade = null; }
+      const dias  = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+      const dados = Array.isArray(atividadeSemanal) ? atividadeSemanal : Array(7).fill(0);
+      chartAtividade = new Chart($('chart-atividade').getContext('2d'), {
+        type: 'bar',
+        data: {
+          labels: dias,
+          datasets: [{
+            label: 'Mensagens',
+            data: dados,
+            backgroundColor: ctx => {
+              const g = ctx.chart.ctx.createLinearGradient(0, 0, 0, 160);
+              g.addColorStop(0, 'rgba(0,255,176,0.35)');
+              g.addColorStop(1, 'rgba(0,255,176,0.05)');
+              return g;
+            },
+            borderColor: '#00ffb0',
+            borderWidth: 2,
+            borderRadius: 8,
+            borderSkipped: false,
+          }],
+        },
+        options: {
+          responsive: true,
+          animation: { duration: 900, easing: 'easeOutQuart' },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: '#13141f',
+              borderColor: '#00ffb0',
+              borderWidth: 1,
+              titleColor: '#e8eaf0',
+              bodyColor: '#00ffb0',
+              padding: 10,
+              callbacks: { label: ctx => ` ${fmtNum(ctx.raw)} msgs` },
+            },
+          },
+          scales: {
+            x: { ticks: { color: CHART_TICK, font: CHART_FONT }, grid: { display: false } },
+            y: { ticks: { color: CHART_TICK, font: CHART_FONT }, grid: { color: CHART_GRID }, beginAtZero: true },
+          },
+        },
+      });
+    }
+
+    function renderRelacionamento(u) {
+      const container = $('rel-conteudo');
+      const cas = u.casamento || {};
+
+      if (!u.casadoCom && !cas.ativo) {
+        container.innerHTML = `
+          <div class="rel-vazio">
+            💔 Você ainda não tem um relacionamento no bot.<br/>
+            Use <strong>!casar @pessoa</strong> ou <strong>!namorar @pessoa</strong> em um grupo!
+          </div>`;
+        return;
+      }
+
+      const tipoEmoji = (cas.tipo || u.casadoTipo) === 'casamento' ? '💍' : '💕';
+      const tipoLabel = (cas.tipo || u.casadoTipo) === 'casamento' ? 'Casado(a) com' : 'Namorando com';
+      const nomeParceiro = cas.nomeParceiro || u.nomeParceiro || (cas.idWhatsApp || u.casadoCom || '').split('@')[0] || 'Parceiro(a)';
+      const telParceiro = cas.telefoneParceiro ? `+${cas.telefoneParceiro}` : (u.casadoCom ? '+' + u.casadoCom.split('@')[0] : '');
+
+      const desdeData = fmtData(cas.desde || u.casadoDesde);
+      const duracao = cas.duracao ? `${cas.duracao} de união` : '';
+      const nomeGrupo = cas.nomeGrupo ? `📍 Unídos no grupo <strong>${escapeHtml(cas.nomeGrupo)}</strong>` : '';
+
+      container.innerHTML = `
+        <div class="rel-card">
+          <div class="rel-ring-icon">${tipoEmoji}</div>
+          <div class="rel-info">
+            <div class="rel-nome">${escapeHtml(nomeParceiro)} ${telParceiro ? `<span class="rel-tel">(${telParceiro})</span>` : ''}</div>
+            <div class="rel-tipo">${tipoLabel}</div>
+            <div class="rel-meta">
+              ${desdeData ? `<span>📅 Desde ${desdeData}</span>` : ''}
+              ${duracao ? `<span class="rel-badge-duracao">⏳ ${duracao}</span>` : ''}
+            </div>
+            ${nomeGrupo ? `<div class="rel-grupo-info">${nomeGrupo}</div>` : ''}
+          </div>
+        </div>`;
+    }
+
+    function renderPet(pet) {
+  const card  = $('pet-card');
+  const vazio = $('pet-vazio');
+
+  if (!pet || (!pet.nome && !pet.name)) {
+    show('pet-vazio');
+    return;
+  }
+
+  hide('pet-vazio');
+
+  const nomePet = pet.nome ?? pet.name;
+
+  const barraHtml = (label, val, max, cor) => {
+    const pct = Math.min(100, Math.max(0, Math.round((val / max) * 100)));
+    return `
+      <div class="pet-stat-row">
+        <span class="pet-stat-label">${label}</span>
+        <div class="pet-barra-outer">
+          <div class="pet-barra-inner" style="width:${pct}%;background:${cor};"></div>
+        </div>
+        <span class="pet-stat-num">${val}/${max}</span>
+      </div>`;
+  };
+
+  const rarityColor = {
+    comum:    '#a0a3b4',
+    incomum:  '#00ffb0',
+    raro:     '#60a5ff',
+    epico:    '#b855ff',
+    lendario: '#ffd060',
+  };
+  const cor = rarityColor[(pet.rarity || '').toLowerCase()] || '#a0a3b4';
+
+  card.innerHTML = `
+    <div class="pet-card-wrap">
+      <div class="pet-avatar" style="border-color:${cor};box-shadow:0 0 18px ${cor}33;">
+        ${pet.type || '🐾'}
+      </div>
+      <div class="pet-info">
+        <div class="pet-nome">${nomePet}</div>
+        <div class="pet-meta">
+          <span class="pet-badge" style="color:${cor};border-color:${cor}33;background:${cor}11;">
+            ${(pet.rarity || 'Comum')}
+          </span>
+          <span class="pet-nivel">Nível ${pet.level ?? 1}</span>
+        </div>
+        <div class="pet-barras">
+          ${barraHtml('❤️ Vida',     pet.energy    ?? 100, 100, '#ff6482')}
+          ${barraHtml('🍖 Fome',     pet.fullness  ?? 100, 100, '#ffd060')}
+          ${barraHtml('😊 Humor',    pet.happiness ?? 100, 100, '#00ffb0')}
+        </div>
+      </div>
+    </div>`;
+}
+
+    function renderGrupos(grupos) {
+      const grid  = $('grupos-grid');
+      const vazio = $('grupos-vazio');
+      if (!grupos || grupos.length === 0) {
+        show('grupos-vazio');
+        return;
+      }
+      hide('grupos-vazio');
+      grid.innerHTML = grupos.map(g => {
+        const tier = tierLevel(g.level);
+        return `
+          <div class="grupo-card">
+            <div class="grupo-card-nome" title="${g.nome || g.jid}">
+              ${g.nome || g.jid.split('@')[0]}
+            </div>
+            <div class="grupo-card-stats">
+              <div class="grupo-stat">
+                <span class="grupo-stat-label">XP</span>
+                <span class="grupo-stat-val neon-roxo">${fmtNum(g.xp)}</span>
+              </div>
+              <div class="grupo-stat">
+                <span class="grupo-stat-label">Gold</span>
+                <span class="grupo-stat-val neon-gold">${fmtNum(g.gold)}</span>
+              </div>
+              <div class="grupo-stat">
+                <span class="grupo-stat-label">Nível</span>
+                <span class="grupo-stat-val">${g.level} <span style="font-size:0.7rem;opacity:0.7;">${tier.emoji}</span></span>
+              </div>
+              <div class="grupo-stat">
+                <span class="grupo-stat-label">Msgs</span>
+                <span class="grupo-stat-val">${fmtNum(g.mensagens)}</span>
+              </div>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    function tierLevel(level) {
+      const n = level || 1;
+      if (n <= 10) return { classe: 'tier-gray', emoji: '⚔️',  label: 'Novato'   };
+      if (n <= 30) return { classe: 'tier-roxo', emoji: '🔮',  label: 'Veterano' };
+      if (n <= 60) return { classe: 'tier-gold', emoji: '👑',  label: 'Élite'    };
+      return              { classe: 'tier-mint', emoji: '💎',  label: 'Lendário' };
+    }
+
+    function preencherPerfil(u) {
+      const ini = iniciais(u.nome);
+      const cor = corAvatar(u.nome);
+      const el  = $('avatar-iniciais');
+      el.textContent = ini;
+      el.style.background  = cor.bg;
+      el.style.color       = cor.text;
+      el.style.boxShadow   = `0 0 0 2px ${cor.border}, 0 0 22px ${cor.glow}`;
+      $('perfil-nome').textContent   = u.nome || 'Sem nome';
+      $('perfil-numero').textContent = u.telefone ? '+' + u.telefone : '—';
+      if (u.bio) {
+        $('perfil-bio').textContent = u.bio;
+        show('perfil-bio');
+      }
+      const tier = tierLevel(u.level);
+      $('stat-level').innerHTML = `
+        ${u.level ?? '—'}
+        <span class="level-badge ${tier.classe}" style="margin-top:0.3rem;">
+          ${tier.emoji} ${tier.label}
+        </span>`;
+      $('stat-xp').textContent   = fmtNum(u.xp);
+      $('stat-gold').textContent = fmtNum(u.gold);
+      $('stat-rank').textContent = u.posicaoRanking ? `#${u.posicaoRanking}` : '—';
+      const pct = u.xpProgresso ?? 0;
+      $('xp-atual-txt').textContent = fmtNum(u.xp) + ' XP';
+      $('xp-prox-txt').textContent  = `Próx. nível: ${fmtNum(u.xpParaProximo)} XP`;
+      requestAnimationFrame(() => {
+        setTimeout(() => { $('barra-xp').style.width = pct + '%'; }, 150);
+      });
+      renderChartXP(u.xpHistory || {});
+      renderChartAtividade(u.atividadeSemanal);
+      $('act-mensagens').textContent = fmtNum(u.mensagens);
+      $('act-quiz').textContent      = fmtNum(u.quizPoints);
+      $('act-pet').textContent       = (u.pet?.nome ?? u.pet?.name)
+        ? `${u.pet.nome ?? u.pet.name} nv${u.pet.level ?? 1}`
+        : 'Nenhum';
+      renderGrupos(u.grupos);
+renderRelacionamento(u);
+renderPet(u.pet);
+    }
+
+    /* ════════════════════════════════════════
+       INIT — fluxo de autenticação
+    ════════════════════════════════════════ */
+    async function init() {
+      const params     = new URLSearchParams(window.location.search);
+      const tokenParam = params.get('token');
+
+      // Prioridade: JWT do login por senha (localStorage) > token via link (sessionStorage)
+      let jwtSalvo = localStorage.getItem('jwt') || sessionStorage.getItem('piro_jwt');
+
+      // Sem nenhuma autenticação → redireciona pro login
+      if (!tokenParam && !jwtSalvo) {
+        window.location.replace('login.html');
+        return;
+      }
+
+      show('tela-loading');
+
+      try {
+        // ── Limpa o token da URL antes de qualquer fetch
+        if (tokenParam) {
+          history.replaceState(null, '', 'perfil.html');
+        }
+
+        // ── Troca token temporário (link do bot) por JWT de sessão
+        if (tokenParam) {
+          const res  = await fetch(`${API}/auth/token`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token: tokenParam }),
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || 'Token inválido ou expirado.');
+          jwtSalvo = data.jwt;
+          if (!jwtSalvo) throw new Error('Resposta inesperada da API.');
+          sessionStorage.setItem('piro_jwt', jwtSalvo);
+localStorage.setItem('jwt', jwtSalvo);
+        }
+
+        // ── Busca dados do usuário
+        const meRes  = await fetch(`${API}/user/me`, {
+          headers: { 'Authorization': `Bearer ${jwtSalvo}` },
+        });
+        const meData = await meRes.json();
+
+        if (!meRes.ok) {
+          if (meRes.status === 401) {
+            // Limpa ambos os storages e redireciona pro login
+            sessionStorage.removeItem('piro_jwt');
+            localStorage.removeItem('jwt');
+            window.location.replace('login.html');
+            return;
+          }
+          throw new Error(meData.error || 'Erro ao carregar perfil.');
+        }
+
+        // ── Renderiza
+        hide('tela-loading');
+        show('painel');
+        preencherPerfil(meData);
+
+        const navCassino = document.getElementById('nav-cassino');
+        if (navCassino) navCassino.style.display = 'flex';
+
+      } catch (err) {
+        hide('tela-loading');
+        $('erro-msg').textContent = err.message || 'Erro desconhecido.';
+        show('tela-erro');
+      }
+    }
+
+    function sairConta() {
+  localStorage.removeItem('jwt');
+  sessionStorage.removeItem('piro_jwt');
+  window.location.replace('login.html');
+}
+
+async function apagarConta() {
+  const confirmado = confirm('⚠️ Tem certeza? Sua conta será apagada.\nSeus dados de jogo (XP, gold, grupos) serão mantidos.');
+  if (!confirmado) return;
+
+  const jwt = localStorage.getItem('jwt') || sessionStorage.getItem('piro_jwt');
+  try {
+    const res = await fetch(`${API}/auth/conta`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${jwt}` },
+    });
+    if (!res.ok) throw new Error('Erro ao apagar conta.');
+    localStorage.removeItem('jwt');
+    sessionStorage.removeItem('piro_jwt');
+    alert('✅ Conta apagada com sucesso!');
+    window.location.replace('login.html');
+  } catch (err) {
+    alert('Erro ao apagar conta. Tente novamente.');
+  }
+}
+
+    init();
+  </script>
+</body>
+</html>
