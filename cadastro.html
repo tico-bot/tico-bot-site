@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Criar Conta — Tico Bot</title>
+  <link rel="stylesheet" href="login.css" />
+  <link rel="stylesheet" href="ios-glass.css" />
+</head>
+<body>
+  <div class="auth-wrapper">
+    <div class="auth-card">
+      <div class="auth-brand">
+        <span class="brand-emoji">🤖</span>
+        <h1>Tico Bot</h1>
+        <p class="brand-sub">Criar Conta</p>
+      </div>
+
+      <form id="cadastroForm" novalidate>
+        <div class="field-group">
+          <label for="idWhatsApp">Número do WhatsApp</label>
+          <input id="idWhatsApp" type="tel" placeholder="5565999999999"
+            autocomplete="tel" maxlength="15" required />
+          <span class="field-hint">DDI + DDD + número, só dígitos. Ex: 5565912345678</span>
+        </div>
+
+        <div class="field-group">
+          <label for="email">Email</label>
+          <input id="email" type="email" placeholder="seu@email.com"
+            autocomplete="email" required />
+          <span class="field-hint">Usado para recuperação de conta.</span>
+        </div>
+
+        <div class="field-group">
+          <label for="username">Nome de usuário</label>
+          <input id="username" type="text" placeholder="seu_usuario"
+            autocomplete="username" maxlength="30" required />
+          <span class="field-hint">3–30 caracteres. Letras, números e _</span>
+        </div>
+
+        <div class="field-group">
+          <label for="password">Senha</label>
+          <div class="password-wrap">
+            <input id="password" type="password" placeholder="Mínimo 6 caracteres"
+              autocomplete="new-password" required />
+            <button type="button" class="toggle-pw" aria-label="Mostrar senha" tabindex="-1">👁️</button>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label for="passwordConfirm">Confirmar senha</label>
+          <div class="password-wrap">
+            <input id="passwordConfirm" type="password" placeholder="Repita a senha"
+              autocomplete="new-password" required />
+            <button type="button" class="toggle-pw2" aria-label="Mostrar senha" tabindex="-1">👁️</button>
+          </div>
+        </div>
+
+        <div id="cadastroMsg" class="msg hidden"></div>
+
+        <button type="submit" class="btn-primary" id="btnCadastrar">
+          <span class="btn-label">Criar conta</span>
+          <span class="btn-spinner hidden">⏳</span>
+        </button>
+      </form>
+
+      <p class="auth-footer">
+        Já tem conta? <a href="login.html">Entrar</a>
+      </p>
+    </div>
+  </div>
+
+  <script>
+    const API = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+      ? 'http://localhost:3000/api'
+      : 'https://whatsappbot2-130c.onrender.com/api';
+
+    if (localStorage.getItem('jwt')) {
+      window.location.replace('perfil.html');
+    }
+
+    const form   = document.getElementById('cadastroForm');
+    const btn    = document.getElementById('btnCadastrar');
+    const msgBox = document.getElementById('cadastroMsg');
+
+    document.querySelector('.toggle-pw').addEventListener('click', () => {
+      const inp = document.getElementById('password');
+      const show = inp.type === 'password';
+      inp.type = show ? 'text' : 'password';
+      document.querySelector('.toggle-pw').textContent = show ? '🙈' : '👁️';
+    });
+    document.querySelector('.toggle-pw2').addEventListener('click', () => {
+      const inp = document.getElementById('passwordConfirm');
+      const show = inp.type === 'password';
+      inp.type = show ? 'text' : 'password';
+      document.querySelector('.toggle-pw2').textContent = show ? '🙈' : '👁️';
+    });
+
+    function setLoading(on) {
+      btn.disabled = on;
+      btn.querySelector('.btn-label').classList.toggle('hidden', on);
+      btn.querySelector('.btn-spinner').classList.toggle('hidden', !on);
+    }
+
+    function showMsg(text, tipo = 'error') {
+      msgBox.textContent = text;
+      msgBox.className = `msg msg--${tipo}`;
+    }
+
+    function msgPorStatus(status, serverMsg) {
+      if (status === 400) {
+        const seguros = ['entre 3 e 30', 'letras, números', 'mínimo 6', 'já está em uso', 'Perfil não encontrado'];
+        if (serverMsg && seguros.some(s => serverMsg.includes(s))) return serverMsg;
+        return 'Dados inválidos. Verifique os campos e tente novamente.';
+      }
+      if (status === 404) return 'Número não encontrado. Mande uma mensagem no grupo primeiro.';
+      if (status === 429) return 'Muitas tentativas. Aguarde alguns minutos.';
+      if (status >= 500) return 'Servidor indisponível. Tente novamente mais tarde.';
+      return 'Erro ao criar conta.';
+    }
+
+    // Fetch com retry automático e aviso de "servidor acordando"
+    async function fetchComRetry(url, opts, tentativas = 2) {
+      for (let i = 0; i < tentativas; i++) {
+        try {
+          if (i === 1) showMsg('⏳ Servidor acordando, aguarde...', 'info');
+          const res = await fetch(url, opts);
+          return res;
+        } catch (e) {
+          if (i === tentativas - 1) throw e;
+          await new Promise(r => setTimeout(r, 4000));
+        }
+      }
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const rawTel          = document.getElementById('idWhatsApp').value;
+      const idWhatsAppNum   = rawTel.replace(/\D/g, '');
+      const email           = document.getElementById('email').value.trim();
+      const username        = document.getElementById('username').value.trim();
+      const password        = document.getElementById('password').value;
+      const passwordConfirm = document.getElementById('passwordConfirm').value;
+
+      if (!idWhatsAppNum || idWhatsAppNum.length < 10 || idWhatsAppNum.length > 15) {
+        showMsg('Número inválido. Use DDI + DDD + número (só dígitos).');
+        return;
+      }
+      if (!email || !email.includes('@')) {
+        showMsg('Digite um email válido.');
+        return;
+      }
+      if (username.length < 3) {
+        showMsg('Nome de usuário muito curto (mínimo 3 caracteres).');
+        return;
+      }
+      if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+        showMsg('Usuário só pode ter letras, números e _.');
+        return;
+      }
+      if (password.length < 6) {
+        showMsg('Senha muito curta (mínimo 6 caracteres).');
+        return;
+      }
+      if (password !== passwordConfirm) {
+        showMsg('As senhas não conferem.');
+        return;
+      }
+
+      setLoading(true);
+      try {
+        const res = await fetchComRetry(`${API}/auth/cadastrar`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            idWhatsApp: `${idWhatsAppNum}@s.whatsapp.net`,
+            email,
+            username,
+            password,
+          }),
+        });
+
+        const data = await res.json();
+
+        if (res.status === 409 && data.error?.includes('já possui')) {
+          showMsg('Você já tem uma conta. Redirecionando para o login…', 'info');
+          setTimeout(() => window.location.replace('login.html'), 2000);
+          return;
+        }
+
+        if (res.status === 409) {
+          if (data.error?.includes('email')) {
+            showMsg('Este email já está sendo usado por outra conta.');
+          } else {
+            showMsg('Este nome de usuário já está em uso. Escolha outro.');
+          }
+          return;
+        }
+
+        if (!res.ok) {
+          showMsg(msgPorStatus(res.status, data.error));
+          return;
+        }
+
+        showMsg('Conta criada! Redirecionando para o login…', 'success');
+        setTimeout(() => window.location.replace('login.html'), 2000);
+
+      } catch {
+        showMsg('Não foi possível conectar ao servidor. Tente novamente em instantes.');
+      } finally {
+        setLoading(false);
+      }
+    });
+  </script>
+</body>
+</html>
