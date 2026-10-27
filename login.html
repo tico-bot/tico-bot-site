@@ -28,7 +28,7 @@
           <div class="password-wrap">
             <input id="password" type="password" placeholder="••••••"
               autocomplete="current-password" required />
-            <button type="button" class="toggle-pw" aria-label="Mostrar senha" tabindex="-1">👁️</button>
+            <button type="button" class="toggle-pw" aria-label="Mostrar senha">👁️</button>
           </div>
         </div>
 
@@ -67,6 +67,7 @@
       const show = pwInput.type === 'password';
       pwInput.type = show ? 'text' : 'password';
       togglePw.textContent = show ? '🙈' : '👁️';
+      togglePw.setAttribute('aria-label', show ? 'Ocultar senha' : 'Mostrar senha');
     });
 
     let cooldownAt = 0;
@@ -149,9 +150,14 @@
           return;
         }
 
+        if (typeof data.jwt !== 'string' || !data.jwt) {
+          showError('O servidor não retornou uma sessão válida. Tente novamente.');
+          return;
+        }
+
         localStorage.setItem('jwt', data.jwt);
-sessionStorage.setItem('piro_jwt', data.jwt);  // ← sincroniza os dois storages
-window.location.replace('perfil.html');
+        sessionStorage.setItem('piro_jwt', data.jwt);
+        window.location.replace('perfil.html');
       } catch {
         showError('Não foi possível conectar ao servidor. Tente novamente em instantes.');
       } finally {
