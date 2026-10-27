@@ -9,41 +9,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../index.css" />
   <link rel="stylesheet" href="corrida.css" />
-  <style>
-    /* fallback: garante variáveis mesmo se index.css não carregar */
-    :root {
-      --bg-base:      #07080d;
-      --bg-surface:   #0d0f17;
-      --bg-card:      #12141f;
-      --bg-elevated:  #171a26;
-      --border:       #1f2230;
-      --border-soft:  #181b27;
-      --text-primary:   #eef0f8;
-      --text-secondary: #9298ad;
-      --text-dim:       #555a70;
-      --mint:        #00ffb0;
-      --mint-soft:   #00ffb018;
-      --mint-glow:   #00ffb055;
-      --purple:      #b855ff;
-      --purple-soft: #b855ff18;
-      --purple-glow: #b855ff55;
-      --blue:        #2de2ff;
-      --blue-soft:   #2de2ff18;
-      --blue-glow:   #2de2ff55;
-      --gold:        #ffd060;
-      --silver:      #c0cfe0;
-      --bronze:      #e8956d;
-      --red:         #ff3b6e;
-      --red-soft:    #ff3b6e18;
-      --font-display: 'Space Grotesk', system-ui, sans-serif;
-      --font-body:    'Inter', system-ui, sans-serif;
-      --font-mono:    'IBM Plex Mono', ui-monospace, monospace;
-      --radius-sm:  8px;
-      --radius-md:  14px;
-      --radius-lg:  20px;
-    }
-  </style>
   <link rel="stylesheet" href="../ios-glass.css" />
+  <link rel="stylesheet" href="jogos-theme.css" />
 </head>
 
 <body>
@@ -105,7 +72,7 @@
     <span class="glyph">$ auth --required</span>
     <h3>Faça login para apostar</h3>
     <p>Use <strong>!meupainel</strong> no WhatsApp para receber seu link de acesso.</p>
-    <a href="perfil.html" class="btn-primary">
+    <a href="../perfil.html" class="btn-primary">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
       Ir para Login
     </a>
@@ -249,12 +216,12 @@
 const API = 'https://tico-bot-6jpn.onrender.com/api';
 
 const BICHOS = [
-  { idx: 0, nome: '🐎 Cavalo',    emoji: '🐎', odds: 2.0, velocidade: 9, cor: '#2de2ff' },
-  { idx: 1, nome: '🐅 Tigre',     emoji: '🐅', odds: 2.5, velocidade: 8, cor: '#e8956d' },
-  { idx: 2, nome: '🦊 Raposa',    emoji: '🦊', odds: 3.0, velocidade: 7, cor: '#ffd060' },
-  { idx: 3, nome: '🐕 Cachorro',  emoji: '🐕', odds: 3.5, velocidade: 6, cor: '#b855ff' },
-  { idx: 4, nome: '🐗 Javali',    emoji: '🐗', odds: 4.0, velocidade: 5, cor: '#00ffb0' },
-  { idx: 5, nome: '🐢 Tartaruga', emoji: '🐢', odds: 8.0, velocidade: 2, cor: '#7fff6e' },
+  { idx: 0, nome: '🐎 Cavalo',    emoji: '🐎', odds: 2.0, velocidade: 9, cor: '#ffffff' },
+  { idx: 1, nome: '🐅 Tigre',     emoji: '🐅', odds: 2.5, velocidade: 8, cor: '#ffffff' },
+  { idx: 2, nome: '🦊 Raposa',    emoji: '🦊', odds: 3.0, velocidade: 7, cor: '#ffffff' },
+  { idx: 3, nome: '🐕 Cachorro',  emoji: '🐕', odds: 3.5, velocidade: 6, cor: '#ffffff' },
+  { idx: 4, nome: '🐗 Javali',    emoji: '🐗', odds: 4.0, velocidade: 5, cor: '#ffffff' },
+  { idx: 5, nome: '🐢 Tartaruga', emoji: '🐢', odds: 8.0, velocidade: 2, cor: '#ffffff' },
 ];
 
 const PISTA_LEN = 18;

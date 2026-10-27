@@ -1,0 +1,70 @@
+/* Tema compartilhado das páginas de jogos: preto fosco e branco. */
+:root {
+  --purple: #fff;
+  --purple-soft: rgba(255,255,255,.08);
+  --purple-glow: rgba(255,255,255,.14);
+  --mint: #fff;
+  --mint-soft: rgba(255,255,255,.07);
+  --mint-glow: rgba(255,255,255,.14);
+  --blue: #fff;
+  --blue-soft: rgba(255,255,255,.07);
+  --blue-glow: rgba(255,255,255,.14);
+  --gold: #fff;
+  --gold-lo: rgba(255,255,255,.07);
+  --gold-glow: rgba(255,255,255,.14);
+  --red: #fff;
+  --red-soft: rgba(255,255,255,.07);
+  --bg-base: #0b0b0b;
+  --bg-surface: #111;
+  --bg-card: #171717;
+  --bg-elevated: #202020;
+  --border: #383838;
+  --border-soft: #292929;
+  --text-primary: #fff;
+  --text-secondary: #e0e0e0;
+  --text-dim: #b5b5b5;
+}
+body * {
+  background-image: none !important;
+}
+body {
+  background: #0b0b0b !important;
+  color: #fff !important;
+}
+body :where(.login-gate, .group-selector-card, .slot-machine, .slot-machine-card,
+  .paytable-card, .paytable, .history-card, .corrida-card, .odds-card,
+  .slot-result, .corrida-result, .pista-wrap, .pista, .pista-linha,
+  .reels-wrap, .reels, .reel, .reel-inner, .reel-box, .session-stat,
+  .slot-result-item, .corrida-result-item, .paytable-row, .odds-row,
+  .bicho-card, .quick-bet, .status-pill, .saldo-chip, .result-item) {
+  background-color: #171717 !important;
+  color: #fff !important;
+  border-color: #383838 !important;
+  box-shadow: none !important;
+}
+body :where(.paytable-title, .odds-title, .history-title, .slot-title,
+  .corrida-title, .corrida-status, .slot-status, .bicho-label, .odds-tip,
+  .paytable-symbols, .paytable-mult, .odds-mult, .rarity-label,
+  .rarity-badge, .odds-badge, .gold-val, .mint-val, .red-val) {
+  color: #fff !important;
+}
+body :where(.paytable-title, .odds-title, .history-title)::after,
+body :where(.paytable-title, .odds-title, .history-title)::before,
+body :where(.jackpot-row, .pista, .pista-linha, .trilha, .trilha-fill,
+  .odds-bar, .odds-bar-wrap, .rarity-badge, .odds-badge) {
+  background-image: none !important;
+}
+body :where(.trilha-fill, .odds-bar) {
+  background: #fff !important;
+}
+body :where(.bicho-card.selected, .quick-bet.active, .quick-bet:hover,
+  .bicho-card:hover, .status-pill.win, .status-pill.lose, .jackpot-row) {
+  background: #292929 !important;
+  border-color: #777 !important;
+  color: #fff !important;
+}
+body :where(.slot-result-title, .corrida-result-title).win,
+body :where(.slot-result-title, .corrida-result-title).lose,
+body :where(.slot-result-title, .corrida-result-title).jackpot {
+  color: #fff !important;
+}

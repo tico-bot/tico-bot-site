@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="../index.css" />
   <link rel="stylesheet" href="cassino.css" />
   <link rel="stylesheet" href="../ios-glass.css" />
+  <link rel="stylesheet" href="jogos-theme.css" />
 </head>
 
 <body>
@@ -17,19 +18,19 @@
 <!-- ══════════ NAV ══════════ -->
 <nav class="top-nav">
   <div class="nav-inner">
-    <a href="index.html" class="nav-brand">
+    <a href="../index.html" class="nav-brand">
       <div class="nav-brand-mark">T</div>
       <span class="nav-brand-name">Tico Bot</span>
     </a>
     <ul class="nav-links">
       <li>
-        <a href="index.html">
+        <a href="../index.html">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
           <span>Ranking</span>
         </a>
       </li>
       <li>
-        <a href="perfil.html">
+        <a href="../perfil.html">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
           <span>Meu Perfil</span>
         </a>
@@ -41,7 +42,7 @@
         </a>
       </li>
       <li>
-        <a href="admin.html">
+        <a href="../admin.html">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2l2.09 6.26H21l-5.47 3.97 2.09 6.26L12 14.52l-5.62 3.97 2.09-6.26L3 8.26h6.91z"/></svg>
           <span>Admin</span>
         </a>
@@ -66,7 +67,7 @@
     <span class="glyph">$ auth --required</span>
     <h3>Faça login para jogar</h3>
     <p>Use <strong>!meupainel</strong> no WhatsApp para receber seu link de acesso.</p>
-    <a href="perfil.html" class="btn-primary">
+    <a href="../perfil.html" class="btn-primary">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
       Ir para Login
     </a>
@@ -716,7 +717,7 @@ function dispararConfete() {
     y:    Math.random() * -canvas.height,
     vx:   (Math.random() - .5) * 4,
     vy:   Math.random() * 4 + 2,
-    color: ['#ffd060','#b855ff','#00ffb0','#2de2ff','#ff3b6e'][Math.floor(Math.random() * 5)],
+    color: ['#ffffff','#e8e8e8','#d0d0d0','#f5f5f5','#bdbdbd'][Math.floor(Math.random() * 5)],
     size: Math.random() * 8 + 4,
     rot:  Math.random() * 360,
     vr:   (Math.random() - .5) * 8,
