@@ -1,0 +1,540 @@
+/* ── CASSINO EXCLUSIVO ── */
+
+.cassino-wrap {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 0 20px 80px;
+}
+
+/* ── LOGIN GATE ── */
+.login-gate {
+  text-align: center;
+  padding: 60px 20px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  margin-top: 12px;
+}
+.login-gate .glyph {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--purple);
+  display: block;
+  margin-bottom: 12px;
+}
+.login-gate h3 {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  margin-bottom: 8px;
+}
+.login-gate p {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 20px;
+}
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 22px;
+  background: var(--purple);
+  color: #0d0020;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+  transition: filter .15s;
+}
+.btn-primary:hover { filter: brightness(1.12); }
+
+/* ── SELETOR DE GRUPO ── */
+.group-selector-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 18px 20px;
+  margin-bottom: 16px;
+}
+.group-selector-card label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  margin-bottom: 8px;
+}
+.group-selector-card select {
+  width: 100%;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 11px 13px;
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 14px;
+  appearance: none;
+  outline: none;
+  cursor: pointer;
+  transition: border-color .15s;
+}
+.group-selector-card select:focus { border-color: var(--purple); }
+
+.saldo-chip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 12px;
+  padding: 10px 14px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+.saldo-chip span { color: var(--text-secondary); }
+.saldo-chip strong { color: var(--gold); font-size: 15px; }
+
+/* ── SLOT MACHINE ── */
+.slot-machine {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 28px 20px 24px;
+  margin-bottom: 16px;
+  position: relative;
+  overflow: hidden;
+}
+.slot-machine::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--gold), var(--purple), var(--mint));
+  background-size: 200% 100%;
+  animation: gradient-slide 3s linear infinite;
+}
+
+/* NOVO: gradiente animado na barra topo */
+@keyframes gradient-slide {
+  0%   { background-position: 0% 0%; }
+  100% { background-position: 200% 0%; }
+}
+
+/* NOVO: título com gradiente animado */
+.slot-title {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 700;
+  text-align: center;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  margin-bottom: 22px;
+  background: linear-gradient(90deg, var(--gold), var(--purple), var(--mint), var(--gold));
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradient-slide 4s linear infinite;
+}
+
+/* rolos */
+.reels {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 22px;
+}
+.reel {
+  width: 96px;
+  height: 96px;
+  background: var(--bg-elevated);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color .3s, box-shadow .3s;
+}
+.reel.spinning {
+  border-color: var(--purple);
+  animation: reel-shake .12s ease-in-out infinite;
+}
+
+/* NOVO: pulso dourado contínuo nos rolos de vitória */
+.reel.stopped-win {
+  border-color: var(--gold);
+  animation: reel-pulse 1.2s ease-in-out infinite;
+}
+.reel.stopped-lose { border-color: var(--border); }
+
+@keyframes reel-shake {
+  0%,100% { transform: translateY(0); }
+  25%      { transform: translateY(-3px); }
+  75%      { transform: translateY(3px); }
+}
+
+/* NOVO */
+@keyframes reel-pulse {
+  0%,100% { box-shadow: 0 0 10px -2px #ffd06055; }
+  50%      { box-shadow: 0 0 28px 2px #ffd060bb; }
+}
+
+.reel-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.reel-symbol {
+  width: 96px;
+  height: 96px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40px;
+  flex-shrink: 0;
+}
+
+/* linha de resultado */
+.result-line {
+  position: absolute;
+  top: 50%; left: 0; right: 0;
+  height: 2px;
+  background: var(--gold);
+  opacity: 0;
+  transform: translateY(-50%);
+  transition: opacity .3s;
+  pointer-events: none;
+}
+.reels-wrap { position: relative; }
+.reels-wrap.show-line .result-line { opacity: .6; }
+
+/* status */
+.slot-status {
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-dim);
+  min-height: 18px;
+  margin-bottom: 18px;
+  transition: color .2s;
+}
+.slot-status.win  { color: var(--gold); }
+.slot-status.lose { color: var(--red); }
+
+/* resultado */
+.slot-result {
+  display: none;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  margin-bottom: 18px;
+  text-align: center;
+  animation: fade-up .3s ease;
+}
+.slot-result.show { display: block; }
+.slot-result-title {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.slot-result-title.jackpot   { color: var(--gold); }
+.slot-result-title.win       { color: var(--mint); }
+.slot-result-title.lose      { color: var(--red);  }
+.slot-result-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 10px;
+}
+.slot-result-item {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+}
+.slot-result-item span {
+  display: block;
+  font-size: 10px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  margin-bottom: 3px;
+}
+.slot-result-item strong {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  color: var(--text-primary);
+}
+.slot-result-item.gold-val strong { color: var(--gold); }
+.slot-result-item.mint-val strong { color: var(--mint); }
+.slot-result-item.red-val  strong { color: var(--red);  }
+
+/* aposta */
+.aposta-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.aposta-input-wrap { position: relative; flex: 1; }
+.aposta-input-wrap input {
+  width: 100%;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 15px;
+  font-weight: 600;
+  outline: none;
+  transition: border-color .15s;
+}
+.aposta-input-wrap input:focus { border-color: var(--purple); }
+.aposta-input-wrap input::placeholder { color: var(--text-dim); font-weight: 400; }
+
+.btn-spin {
+  padding: 12px 24px;
+  background: linear-gradient(135deg, var(--gold), #ffaa00);
+  color: #1a0a00;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: filter .15s, transform .1s;
+  box-shadow: 0 0 20px -4px #ffd06066;
+}
+.btn-spin:hover:not(:disabled) { filter: brightness(1.1); transform: translateY(-1px); }
+.btn-spin:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+  transform: none;
+  filter: none;
+}
+
+/* chips de aposta rápida */
+.quick-bets {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+.quick-bet {
+  padding: 5px 12px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all .15s;
+}
+.quick-bet:hover { border-color: var(--gold); color: var(--gold); }
+
+/* NOVO: chip de repetir aposta */
+.quick-bet.repeat-bet {
+  border-color: var(--purple);
+  color: var(--purple);
+}
+.quick-bet.repeat-bet:hover {
+  border-color: var(--purple);
+  color: var(--purple);
+  background: color-mix(in srgb, var(--purple) 12%, transparent);
+}
+
+/* ── NOVO: contador de sessão ── */
+.session-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.session-stat {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  text-align: center;
+}
+.session-stat span {
+  display: block;
+  font-size: 10px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  margin-bottom: 4px;
+}
+.session-stat strong {
+  font-family: var(--font-mono);
+  font-size: 15px;
+  color: var(--text-primary);
+}
+.session-stat.pos strong { color: var(--mint); }
+.session-stat.neg strong { color: var(--red); }
+
+/* ── NOVO: shake na tela em vitória ── */
+@keyframes screen-shake {
+  0%,100% { transform: translateX(0); }
+  20%      { transform: translateX(-6px); }
+  40%      { transform: translateX(6px); }
+  60%      { transform: translateX(-4px); }
+  80%      { transform: translateX(4px); }
+}
+.slot-machine.shake {
+  animation: screen-shake .4s ease;
+}
+
+/* tabela de prêmios */
+.paytable-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 18px 20px;
+}
+.paytable-title {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  margin-bottom: 12px;
+}
+.paytable-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--border-soft);
+  font-size: 13px;
+}
+.paytable-row:last-child { border-bottom: none; }
+.paytable-symbols { font-size: 18px; letter-spacing: 2px; }
+.paytable-mult {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-dim);
+}
+.paytable-mult strong { color: var(--gold); }
+
+/* NOVO: badge de raridade */
+.rarity-badge {
+  font-size: 10px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+.rarity-lendario {
+  background: color-mix(in srgb, var(--gold) 18%, transparent);
+  color: var(--gold);
+  border: 1px solid color-mix(in srgb, var(--gold) 40%, transparent);
+  animation: rarity-glow 2s ease-in-out infinite;
+}
+.rarity-jackpot {
+  background: color-mix(in srgb, var(--purple) 18%, transparent);
+  color: var(--purple);
+  border: 1px solid color-mix(in srgb, var(--purple) 40%, transparent);
+}
+.rarity-raro {
+  background: color-mix(in srgb, var(--mint) 14%, transparent);
+  color: var(--mint);
+  border: 1px solid color-mix(in srgb, var(--mint) 35%, transparent);
+}
+.rarity-comum {
+  background: var(--bg-elevated);
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+}
+
+@keyframes rarity-glow {
+  0%,100% { box-shadow: none; }
+  50%      { box-shadow: 0 0 8px 1px color-mix(in srgb, var(--gold) 50%, transparent); }
+}
+
+/* NOVO: linha destacada para jackpots */
+.paytable-row.jackpot-row {
+  background: color-mix(in srgb, var(--gold) 5%, transparent);
+  border-radius: var(--radius-sm);
+  padding: 7px 8px;
+  margin: 0 -8px;
+  border-bottom: 1px solid color-mix(in srgb, var(--gold) 20%, transparent);
+}
+
+/* histórico */
+.history-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 18px 20px;
+  margin-top: 16px;
+}
+.history-title {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  margin-bottom: 12px;
+}
+.history-list { display: flex; flex-direction: column; gap: 6px; }
+.history-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: var(--bg-elevated);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  animation: fade-up .2s ease;
+}
+.history-symbols { font-size: 16px; letter-spacing: 1px; }
+.history-val { font-family: var(--font-mono); font-size: 13px; font-weight: 600; }
+.history-val.pos { color: var(--mint); }
+.history-val.neg { color: var(--red);  }
+.history-empty {
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 13px;
+  padding: 16px 0;
+  font-family: var(--font-mono);
+}
+
+/* confete canvas */
+#confete-canvas {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 999;
+}
+
+/* ── RESPONSIVO MOBILE ── */
+@media (max-width: 480px) {
+  .cassino-wrap { padding: 0 12px 80px; }
+  .reel { width: 80px; height: 80px; font-size: 32px; }
+  .reel-inner, .reel-symbol { width: 80px; height: 80px; font-size: 32px; }
+  .aposta-row { flex-direction: column; align-items: stretch; }
+  .btn-spin { width: 100%; text-align: center; }
+  .slot-result-grid { grid-template-columns: 1fr; }
+  .quick-bets { justify-content: center; }
+  .session-stats { grid-template-columns: repeat(3, 1fr); }
+}
