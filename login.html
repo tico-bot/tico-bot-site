@@ -18,9 +18,9 @@
 
       <form id="loginForm" novalidate>
         <div class="field-group">
-          <label for="username">Usuário</label>
-          <input id="username" type="text" placeholder="seu_usuario"
-            autocomplete="username" maxlength="30" required />
+          <label for="identifier">Email, telefone ou nome de usuário</label>
+          <input id="identifier" type="text" placeholder="seu_usuario, email@exemplo.com ou +55..."
+            autocomplete="username" maxlength="254" inputmode="text" required />
         </div>
 
         <div class="field-group">
@@ -125,11 +125,11 @@
         return;
       }
 
-      const username = document.getElementById('username').value.trim();
+      const identifier = document.getElementById('identifier').value.trim();
       const password = document.getElementById('password').value;
 
-      if (!username || !password) {
-        showError('Preencha usuário e senha.');
+      if (!identifier || !password) {
+        showError('Preencha email, telefone ou nome de usuário e senha.');
         return;
       }
 
@@ -138,7 +138,7 @@
         const res = await fetchComRetry(`${API}/auth/login`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, password }),
+          body: JSON.stringify({ identifier, password }),
         });
 
         const data = await res.json();
