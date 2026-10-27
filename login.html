@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login — Tico Bot</title>
+  <link rel="stylesheet" href="login.css" />
+  <link rel="stylesheet" href="ios-glass.css" />
+</head>
+<body>
+  <div class="auth-wrapper">
+    <div class="auth-card">
+      <div class="auth-brand">
+        <span class="brand-emoji">🤖</span>
+        <h1>Tico Bot</h1>
+        <p class="brand-sub">Painel do Usuário</p>
+      </div>
+
+      <form id="loginForm" novalidate>
+        <div class="field-group">
+          <label for="username">Usuário</label>
+          <input id="username" type="text" placeholder="seu_usuario"
+            autocomplete="username" maxlength="30" required />
+        </div>
+
+        <div class="field-group">
+          <label for="password">Senha</label>
+          <div class="password-wrap">
+            <input id="password" type="password" placeholder="••••••"
+              autocomplete="current-password" required />
+            <button type="button" class="toggle-pw" aria-label="Mostrar senha" tabindex="-1">👁️</button>
+          </div>
+        </div>
+
+        <div id="loginError" class="msg msg--error hidden"></div>
+        <div id="loginInfo" class="msg msg--info hidden"></div>
+
+        <button type="submit" class="btn-primary" id="btnLogin">
+          <span class="btn-label">Entrar</span>
+          <span class="btn-spinner hidden">⏳</span>
+        </button>
+      </form>
+
+      <p class="auth-footer">
+        Não tem conta? <a href="cadastro.html">Criar conta</a> · <a href="recuperar.html">Esqueceu a senha?</a>
+      </p>
+    </div>
+  </div>
+
+  <script>
+    const API = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+      ? 'http://localhost:3000/api'
+      : 'https://whatsappbot2-130c.onrender.com/api';
+
+    if (localStorage.getItem('jwt')) {
+      window.location.replace('perfil.html');
+    }
+
+    const form     = document.getElementById('loginForm');
+    const btnLogin = document.getElementById('btnLogin');
+    const errBox   = document.getElementById('loginError');
+    const infoBox  = document.getElementById('loginInfo');
+    const pwInput  = document.getElementById('password');
+    const togglePw = document.querySelector('.toggle-pw');
+
+    togglePw.addEventListener('click', () => {
+      const show = pwInput.type === 'password';
+      pwInput.type = show ? 'text' : 'password';
+      togglePw.textContent = show ? '🙈' : '👁️';
+    });
+
+    let cooldownAt = 0;
+
+    function setLoading(on) {
+      btnLogin.disabled = on;
+      btnLogin.querySelector('.btn-label').classList.toggle('hidden', on);
+      btnLogin.querySelector('.btn-spinner').classList.toggle('hidden', !on);
+    }
+
+    function showError(msg) {
+      errBox.textContent = msg;
+      errBox.classList.remove('hidden');
+      infoBox.classList.add('hidden');
+    }
+
+    function showInfo(msg) {
+      infoBox.textContent = msg;
+      infoBox.classList.remove('hidden');
+      errBox.classList.add('hidden');
+    }
+
+    function clearMsgs() {
+      errBox.classList.add('hidden');
+      infoBox.classList.add('hidden');
+    }
+
+    function msgPorStatus(status) {
+      if (status === 401) return 'Usuário ou senha incorretos.';
+      if (status === 429) return 'Muitas tentativas. Aguarde alguns minutos.';
+      if (status >= 500) return 'Servidor indisponível. Tente novamente mais tarde.';
+      return 'Erro ao fazer login.';
+    }
+
+    // Fetch com retry automático e aviso de "servidor acordando"
+    async function fetchComRetry(url, opts, tentativas = 2) {
+      for (let i = 0; i < tentativas; i++) {
+        try {
+          if (i === 1) showInfo('⏳ Servidor acordando, aguarde...');
+          const res = await fetch(url, opts);
+          return res;
+        } catch (e) {
+          if (i === tentativas - 1) throw e;
+          await new Promise(r => setTimeout(r, 4000));
+        }
+      }
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      clearMsgs();
+
+      if (Date.now() < cooldownAt) {
+        const seg = Math.ceil((cooldownAt - Date.now()) / 1000);
+        showError(`Aguarde ${seg}s antes de tentar novamente.`);
+        return;
+      }
+
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+
+      if (!username || !password) {
+        showError('Preencha usuário e senha.');
+        return;
+      }
+
+      setLoading(true);
+      try {
+        const res = await fetchComRetry(`${API}/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password }),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          cooldownAt = Date.now() + (res.status === 429 ? 10_000 : 3_000);
+          showError(msgPorStatus(res.status));
+          return;
+        }
+
+        localStorage.setItem('jwt', data.jwt);
+sessionStorage.setItem('piro_jwt', data.jwt);  // ← sincroniza os dois storages
+window.location.replace('perfil.html');
+      } catch {
+        showError('Não foi possível conectar ao servidor. Tente novamente em instantes.');
+      } finally {
+        setLoading(false);
+      }
+    });
+  </script>
+</body>
+</html>
