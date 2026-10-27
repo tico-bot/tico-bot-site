@@ -96,7 +96,7 @@
     }
 
     function msgPorStatus(status) {
-      if (status === 401) return 'Usuário ou senha incorretos.';
+      if (status === 401) return 'Email, telefone, nome de usuário ou senha incorretos.';
       if (status === 429) return 'Muitas tentativas. Aguarde alguns minutos.';
       if (status >= 500) return 'Servidor indisponível. Tente novamente mais tarde.';
       return 'Erro ao fazer login.';
