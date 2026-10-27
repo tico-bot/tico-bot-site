@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Corrida — Tico Bot</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../index.css" />
+  <link rel="stylesheet" href="corrida.css" />
+  <style>
+    /* fallback: garante variáveis mesmo se index.css não carregar */
+    :root {
+      --bg-base:      #07080d;
+      --bg-surface:   #0d0f17;
+      --bg-card:      #12141f;
+      --bg-elevated:  #171a26;
+      --border:       #1f2230;
+      --border-soft:  #181b27;
+      --text-primary:   #eef0f8;
+      --text-secondary: #9298ad;
+      --text-dim:       #555a70;
+      --mint:        #00ffb0;
+      --mint-soft:   #00ffb018;
+      --mint-glow:   #00ffb055;
+      --purple:      #b855ff;
+      --purple-soft: #b855ff18;
+      --purple-glow: #b855ff55;
+      --blue:        #2de2ff;
+      --blue-soft:   #2de2ff18;
+      --blue-glow:   #2de2ff55;
+      --gold:        #ffd060;
+      --silver:      #c0cfe0;
+      --bronze:      #e8956d;
+      --red:         #ff3b6e;
+      --red-soft:    #ff3b6e18;
+      --font-display: 'Space Grotesk', system-ui, sans-serif;
+      --font-body:    'Inter', system-ui, sans-serif;
+      --font-mono:    'IBM Plex Mono', ui-monospace, monospace;
+      --radius-sm:  8px;
+      --radius-md:  14px;
+      --radius-lg:  20px;
+    }
+  </style>
+  <link rel="stylesheet" href="../ios-glass.css" />
+</head>
+
+<body>
+
+<!-- ══════════ NAV ══════════ -->
+<nav class="top-nav">
+  <div class="nav-inner">
+    <a href="../index.html" class="nav-brand">
+      <div class="nav-brand-mark">T</div>
+      <span class="nav-brand-name">Tico Bot</span>
+    </a>
+    <ul class="nav-links">
+      <li>
+        <a href="../index.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          <span>Ranking</span>
+        </a>
+      </li>
+      <li>
+        <a href="../perfil.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <span>Meu Perfil</span>
+        </a>
+      </li>
+      <li>
+        <a href="../cassino.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+          <span>Cassino</span>
+        </a>
+      </li>
+      <li>
+        <a href="corrida.html" class="active">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12h18M3 6l9 6-9 6"/></svg>
+          <span>Corrida</span>
+        </a>
+      </li>
+      <li>
+        <a href="../admin.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2l2.09 6.26H21l-5.47 3.97 2.09 6.26L12 14.52l-5.62 3.97 2.09-6.26L3 8.26h6.91z"/></svg>
+          <span>Admin</span>
+        </a>
+      </li>
+    </ul>
+  </div>
+</nav>
+
+<!-- ══════════ HERO ══════════ -->
+<section class="hero">
+  <p class="hero-eyebrow">Tico Bot · Corrida</p>
+  <h1 class="hero-title">Corrida de Bichos 🏁</h1>
+  <p class="hero-sub">Escolha seu bicho, defina a aposta e torça pelo campeão!</p>
+</section>
+
+<!-- ══════════ MAIN ══════════ -->
+<div class="corrida-wrap">
+
+  <!-- LOGIN GATE -->
+  <div class="login-gate" id="login-gate">
+    <span class="glyph">$ auth --required</span>
+    <h3>Faça login para apostar</h3>
+    <p>Use <strong>!meupainel</strong> no WhatsApp para receber seu link de acesso.</p>
+    <a href="perfil.html" class="btn-primary">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+      Ir para Login
+    </a>
+  </div>
+
+  <!-- ÁREA DA CORRIDA -->
+  <div id="corrida-area" style="display:none">
+
+    <!-- Seletor de grupo + saldo -->
+    <div class="group-selector-card">
+      <label for="grupo-select">Apostar no grupo</label>
+      <div class="group-select-wrap">
+        <select id="grupo-select">
+          <option value="">Carregando seus grupos…</option>
+        </select>
+      </div>
+      <div class="saldo-chip" id="saldo-chip" style="display:none">
+        <span>💰 Saldo disponível</span>
+        <strong id="saldo-val">— gold</strong>
+      </div>
+    </div>
+
+    <!-- Área principal da corrida -->
+    <div class="corrida-card" id="corrida-card" style="display:none">
+      <div class="corrida-card-header">
+        <div class="corrida-title">🏁 Corrida de Bichos</div>
+        <span class="status-pill" id="status-pill">aguardando</span>
+      </div>
+
+      <!-- Pista de corrida -->
+      <div class="pista-wrap" id="pista-wrap">
+        <div class="pista" id="pista">
+          <!-- linhas geradas via JS -->
+        </div>
+        <div class="meta-flag">🏁</div>
+      </div>
+
+      <!-- Status -->
+      <div class="corrida-status" id="corrida-status">Escolha um bicho e aposte para começar!</div>
+
+      <!-- Resultado -->
+      <div class="corrida-result" id="corrida-result">
+        <div class="corrida-result-title" id="result-title"></div>
+        <div class="corrida-result-grid">
+          <div class="corrida-result-item">
+            <span>Aposta</span>
+            <strong id="result-aposta">—</strong>
+          </div>
+          <div class="corrida-result-item gold-val">
+            <span>Odds</span>
+            <strong id="result-odds">—</strong>
+          </div>
+          <div class="corrida-result-item mint-val" id="result-premio-wrap">
+            <span>Prêmio</span>
+            <strong id="result-premio">—</strong>
+          </div>
+          <div class="corrida-result-item gold-val">
+            <span>Novo Saldo</span>
+            <strong id="result-saldo">—</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- Escolha de bicho -->
+      <div class="bicho-selector" id="bicho-selector">
+        <p class="bicho-label">Escolha seu corredor:</p>
+        <div class="bichos-grid" id="bichos-grid">
+          <!-- cards gerados via JS -->
+        </div>
+      </div>
+
+      <!-- Aposta -->
+      <div class="aposta-row">
+        <div class="aposta-input-wrap">
+          <input
+            type="number"
+            id="aposta-input"
+            placeholder="Valor da aposta…"
+            min="1"
+            max="100000"
+          />
+        <p class="aposta-hint" id="aposta-hint"></p>
+        </div>
+        <button class="btn-correr" id="btn-correr" disabled>
+          🏁 Apostar
+        </button>
+      </div>
+
+      <!-- Quick bets -->
+      <div class="quick-bets">
+        <button class="quick-bet" data-val="50">50</button>
+        <button class="quick-bet" data-val="100">100</button>
+        <button class="quick-bet" data-val="500">500</button>
+        <button class="quick-bet" data-val="1000">1k</button>
+        <button class="quick-bet" data-val="5000">5k</button>
+        <button class="quick-bet" data-val="max">MAX</button>
+        <button class="quick-bet repeat-bet" id="btn-repeat" data-val="repeat" style="display:none">🔁 Repetir</button>
+      </div>
+
+      <!-- Contador de sessão -->
+      <div class="session-stats" id="session-stats" style="display:none">
+        <div class="session-stat">
+          <span>Corridas</span>
+          <strong id="stat-corridas-val">0</strong>
+        </div>
+        <div class="session-stat pos">
+          <span>Ganhos</span>
+          <strong id="stat-ganhos-val">0 gold</strong>
+        </div>
+        <div class="session-stat neg">
+          <span>Perdas</span>
+          <strong id="stat-perdas-val">0 gold</strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabela de odds -->
+    <div class="odds-card" id="odds-card" style="display:none">
+      <div class="odds-title">Tabela de Odds</div>
+      <div id="odds-rows"></div>
+      <p class="odds-tip">⚡ Bichos mais lentos pagam mais, mas ganham com menos frequência!</p>
+    </div>
+
+    <!-- Histórico -->
+    <div class="history-card" id="history-card" style="display:none">
+      <div class="history-title">Histórico da Sessão</div>
+      <div class="history-list" id="history-list">
+        <div class="history-empty">Nenhuma corrida ainda.</div>
+      </div>
+    </div>
+
+  </div><!-- /corrida-area -->
+
+</div><!-- /corrida-wrap -->
+
+<div id="toast"></div>
+
+<footer>Tico-bot · corrida de bichos · powered by Node.js + MongoDB</footer>
+
+<script>
+const API = 'https://whatsappbot2-130c.onrender.com/api';
+
+const BICHOS = [
+  { idx: 0, nome: '🐎 Cavalo',    emoji: '🐎', odds: 2.0, velocidade: 9, cor: '#2de2ff' },
+  { idx: 1, nome: '🐅 Tigre',     emoji: '🐅', odds: 2.5, velocidade: 8, cor: '#e8956d' },
+  { idx: 2, nome: '🦊 Raposa',    emoji: '🦊', odds: 3.0, velocidade: 7, cor: '#ffd060' },
+  { idx: 3, nome: '🐕 Cachorro',  emoji: '🐕', odds: 3.5, velocidade: 6, cor: '#b855ff' },
+  { idx: 4, nome: '🐗 Javali',    emoji: '🐗', odds: 4.0, velocidade: 5, cor: '#00ffb0' },
+  { idx: 5, nome: '🐢 Tartaruga', emoji: '🐢', odds: 8.0, velocidade: 2, cor: '#7fff6e' },
+];
+
+const PISTA_LEN = 18;
+
+/* ══════════════════════════════════════════════════════
+   UTILS
+══════════════════════════════════════════════════════ */
+function $(id) { return document.getElementById(id); }
+
+let toastTimer;
+function showToast(msg, tipo = 'normal') {
+  const t = $('toast');
+  if (!t) return;
+  t.textContent = msg;
+  t.style.borderColor = tipo === 'win' ? 'var(--mint)' : tipo === 'lose' ? 'var(--red)' : 'var(--purple)';
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+function fmtNum(n) {
+  return n != null ? Number(n).toLocaleString('pt-BR') : '—';
+}
+
+function getJwt() {
+  return localStorage.getItem('jwt') || sessionStorage.getItem('piro_jwt') || null;
+}
+
+
+/* ══════════════════════════════════════════════════════
+   ESTADO
+══════════════════════════════════════════════════════ */
+let saldoAtual      = 0;
+let grupoAtual      = null;
+let correndo        = false;
+let bichoEscolhido  = null;
+let ultimaAposta    = null;
+let sessaoCorridas  = 0;
+let sessaoGanhos    = 0;
+let sessaoPerdas    = 0;
+let sessionHistory  = [];
+
+/* ══════════════════════════════════════════════════════
+   PISTA — RENDER
+══════════════════════════════════════════════════════ */
+function buildPista() {
+  const pista = $('pista');
+  if (!pista) return;
+  pista.innerHTML = BICHOS.map((b, i) => `
+    <div class="pista-linha" id="linha-${i}">
+      <span class="bicho-nome-pista">${b.nome.split(' ')[1]}</span>
+      <div class="trilha" id="trilha-${i}">
+        <div class="trilha-fill" id="fill-${i}" style="background:${b.cor}"></div>
+        <span class="bicho-icon" id="icon-${i}" style="left:0%">${b.emoji}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+function setPosicao(idx, pct) {
+  const icon = $(`icon-${idx}`);
+  const fill = $(`fill-${idx}`);
+  if (icon) icon.style.left  = Math.min(pct, 92) + '%';
+  if (fill) fill.style.width = Math.min(pct, 92) + '%';
+}
+
+function resetPista() {
+  BICHOS.forEach((_, i) => {
+    setPosicao(i, 0);
+    const linha = $(`linha-${i}`);
+    if (linha) linha.classList.remove('linha-vencedor', 'linha-perdedor');
+    const icon = $(`icon-${i}`);
+    if (icon) { icon.style.filter = ''; icon.style.transform = ''; }
+  });
+}
+
+function animarCorrida(vencedorIdx, escolhaIdx) {
+  return new Promise(resolve => {
+    const FRAMES  = 30;
+    const DELAY   = 90;
+    let   frame   = 0;
+
+    const pos = BICHOS.map(() => 0);
+
+    const tick = setInterval(() => {
+      frame++;
+      const progresso = frame / FRAMES;
+
+      BICHOS.forEach((b, i) => {
+        if (frame < FRAMES) {
+          const base  = (b.velocidade / 10) * progresso * 85;
+          const ruido = Math.random() * 8;
+          pos[i] = Math.min(base + ruido, 88);
+        } else {
+          pos[i] = i === vencedorIdx ? 95 : Math.min(pos[i], 80);
+        }
+        setPosicao(i, pos[i]);
+      });
+
+      if (frame >= FRAMES) {
+        clearInterval(tick);
+
+        BICHOS.forEach((_, i) => {
+          const linha = $(`linha-${i}`);
+          const icon  = $(`icon-${i}`);
+          if (i === vencedorIdx) {
+            if (linha) linha.classList.add('linha-vencedor');
+            if (icon)  icon.style.transform = 'scale(1.3)';
+          } else {
+            if (linha) linha.classList.add('linha-perdedor');
+          }
+        });
+
+        resolve();
+      }
+    }, DELAY);
+  });
+}
+
+/* ══════════════════════════════════════════════════════
+   SELEÇÃO DE BICHO
+══════════════════════════════════════════════════════ */
+function buildBichosGrid() {
+  const grid = $('bichos-grid');
+  if (!grid) return;
+
+  grid.innerHTML = BICHOS.map(b => {
+    const raridade = b.odds >= 8 ? 'lendario' : b.odds >= 4 ? 'raro' : b.odds >= 3 ? 'incomum' : 'comum';
+    const rarLabel = b.odds >= 8 ? 'lendário' : b.odds >= 4 ? 'azarão' : b.odds >= 3 ? 'incomum' : 'favorito';
+    return `
+      <button class="bicho-card" data-idx="${b.idx}">
+        <span class="bicho-card-check">✓</span>
+        <div class="bicho-emoji">${b.emoji}</div>
+        <div class="bicho-info">
+          <span class="bicho-card-nome">${b.nome.replace(/^\S+\s/, '')}</span>
+          <span class="odds-badge odds-${raridade}">${b.odds}x</span>
+        </div>
+        <span class="rarity-label rarity-${raridade}">${rarLabel}</span>
+      </button>
+    `;
+  }).join('');
+}
+
+function selecionarBicho(idx) {
+  if (correndo) return;
+  bichoEscolhido = idx;
+
+  document.querySelectorAll('.bicho-card').forEach(c => {
+    c.classList.toggle('selected', parseInt(c.dataset.idx) === idx);
+  });
+
+  const btnCorrer = $('btn-correr');
+  if (btnCorrer && grupoAtual) btnCorrer.disabled = false;
+
+  const pill = $('status-pill');
+  if (pill) {
+    pill.className   = 'status-pill';
+    pill.textContent = `${BICHOS[idx].emoji} selecionado`;
+  }
+
+  $('corrida-status').textContent = `${BICHOS[idx].emoji} ${BICHOS[idx].nome} selecionado! Defina a aposta e aposte.`;
+  $('corrida-status').className   = 'corrida-status';
+}
+
+/* ══════════════════════════════════════════════════════
+   TABELA DE ODDS
+══════════════════════════════════════════════════════ */
+function buildOddsTable() {
+  const wrap = $('odds-rows');
+  if (!wrap) return;
+  wrap.innerHTML = BICHOS.map(b => {
+    const pct = Math.round((b.velocidade / 9) * 100);
+    return `
+      <div class="odds-row">
+        <span class="odds-emoji">${b.emoji}</span>
+        <span class="odds-nome">${b.nome.replace(/^\S+\s/, '')}</span>
+        <div class="odds-bar-wrap">
+          <div class="odds-bar" style="width:${pct}%;background:${b.cor}"></div>
+        </div>
+        <span class="odds-mult">${b.odds}x</span>
+      </div>
+    `;
+  }).join('');
+}
+
+/* ══════════════════════════════════════════════════════
+   RESULTADO
+══════════════════════════════════════════════════════ */
+function mostrarResultado(data) {
+  const { vencedorIdx, escolhaIdx, ganhou, premio, lucroLiq, aposta, saldoFinal } = data;
+  const vencedor = BICHOS[vencedorIdx];
+  const escolha  = BICHOS[escolhaIdx];
+  const sinal    = lucroLiq >= 0 ? '+' : '';
+
+  const pill = $('status-pill');
+  if (pill) {
+    pill.className   = 'status-pill ' + (ganhou ? 'pill-win' : 'pill-lose');
+    pill.textContent = ganhou ? 'vitória! 🎉' : 'derrota 😢';
+  }
+
+  const titleEl = $('result-title');
+  titleEl.className = 'corrida-result-title ' + (ganhou ? 'win' : 'lose');
+  titleEl.textContent = ganhou
+    ? `🎉 Vitória! ${vencedor.emoji} ${vencedor.nome.replace(/^\S+\s/, '')} venceu! (${escolha.odds}x)`
+    : `❌ Derrota! ${vencedor.emoji} ${vencedor.nome.replace(/^\S+\s/, '')} venceu.`;
+
+  $('result-aposta').textContent = fmtNum(aposta) + ' gold';
+  $('result-odds').textContent   = escolha.odds + 'x';
+  $('result-premio').textContent = premio > 0 ? '+' + fmtNum(premio) + ' gold' : '—';
+  $('result-saldo').textContent  = fmtNum(saldoFinal) + ' gold';
+
+  const premioWrap = $('result-premio-wrap');
+  premioWrap.className = 'corrida-result-item ' + (premio > 0 ? 'mint-val' : 'red-val');
+
+  const resultEl = $('corrida-result');
+  resultEl.classList.remove('result-win', 'result-lose');
+  resultEl.classList.add('show', ganhou ? 'result-win' : 'result-lose');
+
+  const statusEl = $('corrida-status');
+  statusEl.textContent = ganhou
+    ? `${sinal}${fmtNum(lucroLiq)} gold 🎉`
+    : `-${fmtNum(aposta)} gold 😢`;
+  statusEl.className = 'corrida-status ' + (ganhou ? 'win' : 'lose');
+
+  saldoAtual = saldoFinal;
+  $('saldo-val').textContent = fmtNum(saldoFinal) + ' gold';
+
+  const sel = $('grupo-select');
+  if (sel.selectedIndex >= 0) {
+    sel.options[sel.selectedIndex].dataset.gold = saldoFinal;
+    sel.options[sel.selectedIndex].text =
+      sel.options[sel.selectedIndex].text.replace(/— [\d.,]+ 💰/, `— ${fmtNum(saldoFinal)} 💰`);
+  }
+
+  addHistory(data);
+  atualizarSessao(lucroLiq, aposta);
+
+  tocarSom(ganhou ? 'vitoria' : 'derrota');
+}
+
+/* ══════════════════════════════════════════════════════
+   HISTÓRICO
+══════════════════════════════════════════════════════ */
+function addHistory(data) {
+  const { vencedorIdx, escolhaIdx, lucroLiq, aposta } = data;
+  sessionHistory.unshift({
+    vencedor: BICHOS[vencedorIdx].emoji,
+    escolha:  BICHOS[escolhaIdx].emoji,
+    lucroLiq,
+    aposta,
+  });
+  if (sessionHistory.length > 20) sessionHistory.pop();
+
+  const list = $('history-list');
+  if (!list) return;
+
+  list.innerHTML = sessionHistory.map(h => `
+    <div class="history-item">
+      <span class="history-symbols">Aposta: ${h.escolha} · Venceu: ${h.vencedor}</span>
+      <span class="history-val ${h.lucroLiq >= 0 ? 'pos' : 'neg'}">
+        ${h.lucroLiq >= 0 ? '+' : ''}${fmtNum(h.lucroLiq)} gold
+      </span>
+    </div>
+  `).join('');
+}
+
+/* ══════════════════════════════════════════════════════
+   SESSÃO
+══════════════════════════════════════════════════════ */
+function atualizarSessao(lucroLiq, aposta) {
+  sessaoCorridas++;
+  if (lucroLiq > 0) sessaoGanhos += lucroLiq;
+  else              sessaoPerdas += aposta;
+
+  $('session-stats').style.display = 'grid';
+  $('stat-corridas-val').textContent = sessaoCorridas;
+  $('stat-ganhos-val').textContent   = fmtNum(sessaoGanhos) + ' gold';
+  $('stat-perdas-val').textContent   = fmtNum(sessaoPerdas) + ' gold';
+
+  ultimaAposta = aposta;
+  const btnRepeat = $('btn-repeat');
+  if (btnRepeat) {
+    btnRepeat.style.display = 'inline-flex';
+    btnRepeat.textContent   = `🔁 ${fmtNum(aposta)}`;
+  }
+}
+
+/* ══════════════════════════════════════════════════════
+   SOM
+══════════════════════════════════════════════════════ */
+let _audioCtx = null;
+function getAudioCtx() {
+  if (!_audioCtx) _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return _audioCtx;
+}
+
+function tocarSom(tipo) {
+  try {
+    const ctx = getAudioCtx();
+    if (tipo === 'vitoria') {
+      const notas = [523, 659, 784, 1047, 1319];
+      notas.forEach((freq, i) => {
+        const osc  = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.frequency.value = freq;
+        osc.type = 'triangle';
+        const t = ctx.currentTime + i * 0.1;
+        gain.gain.setValueAtTime(0.18, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
+        osc.start(t); osc.stop(t + 0.22);
+      });
+    } else {
+      const osc  = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.frequency.value = 140;
+      osc.type = 'sawtooth';
+      gain.gain.setValueAtTime(0.1, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+      osc.start(); osc.stop(ctx.currentTime + 0.3);
+    }
+  } catch {}
+}
+
+/* ══════════════════════════════════════════════════════
+   APOSTAR
+══════════════════════════════════════════════════════ */
+async function apostar() {
+  if (correndo || !grupoAtual) return;
+
+  const jwt    = getJwt();
+  if (!jwt) {
+    showToast('Sessão expirada. Faça login novamente.', 'lose');
+    setTimeout(() => { window.location.href = 'perfil.html'; }, 1500);
+    return;
+  }
+
+  // Sanitiza aposta: força inteiro positivo, ignora qualquer manipulação
+  const apostaRaw = parseInt($('aposta-input').value, 10);
+  const aposta    = Number.isFinite(apostaRaw) ? Math.abs(Math.floor(apostaRaw)) : 0;
+
+  // Sanitiza bicho: só aceita índices válidos do array BICHOS
+  const escolha = Number.isInteger(bichoEscolhido) && bichoEscolhido >= 0 && bichoEscolhido < BICHOS.length
+    ? bichoEscolhido
+    : null;
+
+  const hint = $('aposta-hint');
+  const inp  = $('aposta-input');
+
+  if (escolha === null) { showToast('Escolha um bicho antes de apostar!'); return; }
+  if (aposta < 10)      { hint.textContent = 'Mínimo: 10 gold'; inp.classList.add('err'); return; }
+  if (aposta > saldoAtual) { hint.textContent = 'Saldo insuficiente'; inp.classList.add('err'); return; }
+  if (aposta > 100_000) { hint.textContent = 'Máximo: 100.000 gold'; inp.classList.add('err'); return; }
+  hint.textContent = ''; inp.classList.remove('err');
+
+  correndo = true;
+  const btnCorrer = $('btn-correr');
+  btnCorrer.disabled    = true;
+  btnCorrer.textContent = '⏳ Correndo…';
+
+  const pill = $('status-pill');
+  if (pill) { pill.className = 'status-pill pill-running'; pill.textContent = 'largaram! 🚀'; }
+
+  $('corrida-result').classList.remove('show', 'result-win', 'result-lose');
+  $('corrida-status').textContent = 'Largaram! 🚀';
+  $('corrida-status').className   = 'corrida-status';
+
+  resetPista();
+
+  let apiData = null;
+  const [res] = await Promise.all([
+    fetch(`${API}/corrida/apostar`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${jwt}` },
+      body: JSON.stringify({ idGrupo: grupoAtual, escolha: bichoEscolhido, aposta }),
+    }).then(r => r.json().then(d => ({ ok: r.ok, status: r.status, data: d }))),
+    new Promise(r => setTimeout(r, 500)),
+  ]);
+
+  if (!res.ok) {
+    correndo = false;
+    btnCorrer.disabled  = false;
+    btnCorrer.textContent = '🏁 Apostar';
+    if (res.status === 401) {
+      sessionStorage.removeItem('piro_jwt');
+      showToast('Sessão expirada. Faça login novamente.', 'lose');
+      setTimeout(() => { window.location.href = 'perfil.html'; }, 2000);
+    } else {
+      showToast(res.data?.error || 'Erro ao apostar!', 'lose');
+    }
+    return;
+  }
+
+  apiData = res.data;
+
+  await animarCorrida(apiData.vencedorIdx, bichoEscolhido);
+
+  mostrarResultado({ ...apiData, escolhaIdx: bichoEscolhido });
+
+  correndo = false;
+  btnCorrer.disabled  = false;
+  btnCorrer.textContent = '🏁 Apostar';
+
+  showToast(
+    apiData.ganhou
+      ? `+${fmtNum(apiData.lucroLiq)} gold! 🎉`
+      : `-${fmtNum(apiData.aposta)} gold 😢`,
+    apiData.ganhou ? 'win' : 'lose'
+  );
+}
+
+/* ══════════════════════════════════════════════════════
+   AUTH
+══════════════════════════════════════════════════════ */
+function checkAuth() {
+  const jwt = getJwt();
+  if (!jwt) {
+    $('login-gate').style.display   = 'block';
+    $('corrida-area').style.display = 'none';
+    return false;
+  }
+  $('login-gate').style.display   = 'none';
+  $('corrida-area').style.display = 'block';
+  return true;
+}
+
+/* ══════════════════════════════════════════════════════
+   GRUPOS
+══════════════════════════════════════════════════════ */
+async function carregarGrupos() {
+  const jwt = getJwt();
+  const sel = $('grupo-select');
+  if (!sel) return;
+  try {
+    const res  = await fetch(`${API}/user/grupos`, { headers: { Authorization: `Bearer ${jwt}` } });
+    const data = await res.json();
+    if (!res.ok || !data.grupos?.length) {
+      sel.innerHTML = '<option value="">Nenhum grupo encontrado</option>';
+      return;
+    }
+    sel.innerHTML =
+      '<option value="">Selecione um grupo…</option>' +
+      data.grupos
+        .sort((a, b) => (b.gold ?? 0) - (a.gold ?? 0))
+        .map(g => `<option value="${g.jid}" data-gold="${g.gold ?? 0}">${g.nome} — ${fmtNum(g.gold ?? 0)} 💰</option>`)
+        .join('');
+  } catch {
+    sel.innerHTML = '<option value="">Erro ao carregar grupos</option>';
+  }
+}
+
+function onGrupoChange() {
+  const sel    = $('grupo-select');
+  const opt    = sel.options[sel.selectedIndex];
+  grupoAtual   = sel.value || null;
+  saldoAtual   = grupoAtual ? parseInt(opt.dataset.gold || '0', 10) : 0;
+
+  const show = !!grupoAtual;
+
+  $('saldo-chip').style.display     = show ? 'flex' : 'none';
+  $('corrida-card').style.display   = show ? 'block' : 'none';
+  $('odds-card').style.display      = show ? 'block' : 'none';
+  $('history-card').style.display   = show ? 'block' : 'none';
+
+  if (show) {
+    sessaoCorridas = 0; sessaoGanhos = 0; sessaoPerdas = 0; ultimaAposta = null;
+    bichoEscolhido = null;
+    $('session-stats').style.display = 'none';
+    const btnRepeat = $('btn-repeat');
+    if (btnRepeat) btnRepeat.style.display = 'none';
+
+    $('saldo-val').textContent = fmtNum(saldoAtual) + ' gold';
+    $('btn-correr').disabled   = true;
+    $('corrida-status').textContent = 'Escolha um bicho e aposte para começar!';
+    $('corrida-status').className   = 'corrida-status';
+    $('corrida-result').classList.remove('show', 'result-win', 'result-lose');
+
+    const pill = $('status-pill');
+    if (pill) { pill.className = 'status-pill'; pill.textContent = 'aguardando'; }
+
+    document.querySelectorAll('.bicho-card').forEach(c => c.classList.remove('selected'));
+    resetPista();
+  }
+}
+
+/* ══════════════════════════════════════════════════════
+   EVENTOS
+══════════════════════════════════════════════════════ */
+$('grupo-select')?.addEventListener('change', onGrupoChange);
+$('btn-correr')?.addEventListener('click', apostar);
+$('aposta-input')?.addEventListener('keydown', e => { if (e.key === 'Enter') apostar(); });
+$('aposta-input')?.addEventListener('input', () => {
+  $('aposta-hint').textContent = '';
+  $('aposta-input').classList.remove('err');
+  const v = parseInt($('aposta-input').value, 10);
+  document.querySelectorAll('.quick-bet').forEach(b => {
+    const bv = parseInt(b.dataset.val, 10);
+    b.classList.toggle('active', bv === v);
+  });
+});
+
+document.addEventListener('click', e => {
+  const card = e.target.closest('.bicho-card');
+  if (card) {
+    const idx = parseInt(card.dataset.idx, 10);
+    if (Number.isInteger(idx) && idx >= 0 && idx < BICHOS.length) {
+      selecionarBicho(idx);
+    }
+  }
+});
+
+document.querySelectorAll('.quick-bet').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const val   = btn.dataset.val;
+    const input = $('aposta-input');
+    if (!input) return;
+    if (val === 'max') {
+      input.value = Math.max(0, Math.floor(saldoAtual));
+    } else if (val === 'repeat' && ultimaAposta) {
+      input.value = Math.min(Math.abs(Math.floor(ultimaAposta)), saldoAtual);
+    } else {
+      const v = parseInt(val, 10);
+      if (Number.isFinite(v) && v > 0) input.value = Math.min(v, saldoAtual);
+    }
+    $('aposta-hint').textContent = '';
+    $('aposta-input').classList.remove('err');
+    document.querySelectorAll('.quick-bet').forEach(b => b.classList.toggle('active', b === btn));
+  });
+});
+
+/* ══════════════════════════════════════════════════════
+   INIT
+══════════════════════════════════════════════════════ */
+(async function init() {
+  buildPista();
+  buildBichosGrid();
+  buildOddsTable();
+
+  const params     = new URLSearchParams(window.location.search);
+  const tokenParam = params.get('token');
+  if (tokenParam) {
+    try {
+      const res  = await fetch(`${API}/auth/token`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ token: tokenParam }),
+      });
+      const data = await res.json();
+      if (res.ok && data.jwt) {
+        sessionStorage.setItem('piro_jwt', data.jwt);
+        history.replaceState(null, '', 'corrida.html');
+      }
+    } catch {}
+  }
+
+  if (!checkAuth()) return;
+  await carregarGrupos();
+})();
+</script>
+
+</body>
+</html>
