@@ -97,6 +97,12 @@
         <div class="avatar" id="avatar-iniciais"></div>
         <div class="perfil-info">
           <h1 id="perfil-nome">—</h1>
+          <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;margin:.45rem 0;">
+            <input id="display-name-input" type="text" maxlength="40" placeholder="Nome de exibição"
+              aria-label="Nome de exibição" style="max-width:220px;padding:.55rem .75rem;border:1px solid var(--border);border-radius:12px;background:var(--surface,rgba(255,255,255,.04));color:inherit;">
+            <button id="save-display-name" type="button" class="btn-acao" style="cursor:pointer;">Salvar nome</button>
+            <span id="display-name-msg" role="status" aria-live="polite" style="font-size:.85rem;"></span>
+          </div>
           <p class="perfil-numero" id="perfil-numero">—</p>
           <p class="perfil-bio hidden" id="perfil-bio"></p>
         </div>
@@ -534,6 +540,30 @@
       return              { classe: 'tier-mint', emoji: '💎',  label: 'Lendário' };
     }
 
+    document.getElementById('save-display-name').addEventListener('click', async () => {
+      const input = document.getElementById('display-name-input');
+      const msg = document.getElementById('display-name-msg');
+      const displayName = input.value.trim();
+      const token = localStorage.getItem('jwt') || sessionStorage.getItem('piro_jwt');
+      if (!displayName || displayName.length > 40) {
+        msg.textContent = 'Use de 1 a 40 caracteres.';
+        return;
+      }
+      try {
+        const res = await fetch(`${API}/user/display-name`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ displayName }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Não foi possível salvar.');
+        document.getElementById('perfil-nome').textContent = data.displayName;
+        msg.textContent = 'Nome atualizado!';
+      } catch (err) {
+        msg.textContent = err.message || 'Erro ao salvar nome.';
+      }
+    });
+
     function preencherPerfil(u) {
       const ini = iniciais(u.nome);
       const cor = corAvatar(u.nome);
@@ -542,7 +572,8 @@
       el.style.background  = cor.bg;
       el.style.color       = cor.text;
       el.style.boxShadow   = `0 0 0 2px ${cor.border}, 0 0 22px ${cor.glow}`;
-      $('perfil-nome').textContent   = u.nome || 'Sem nome';
+      $('perfil-nome').textContent   = u.displayName || u.nome || 'Sem nome';
+      $('display-name-input').value = u.displayName || '';
       $('perfil-numero').textContent = u.telefone ? '+' + u.telefone : '—';
       if (u.bio) {
         $('perfil-bio').textContent = u.bio;
