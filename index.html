@@ -248,9 +248,9 @@
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
         Ver Perfil
       </a>
-      <button class="modal-btn modal-btn-secondary" id="modal-copy-btn" title="Copiar ID do usuário">
+      <button class="modal-btn modal-btn-secondary" id="modal-copy-btn" title="Copiar número de telefone">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-        Copiar ID
+        Copiar telefone
       </button>
       <button class="modal-btn modal-btn-secondary" id="modal-close-btn">Fechar</button>
     </div>
@@ -524,15 +524,34 @@
 
   $('modal-copy-btn')?.addEventListener('click', async () => {
     if (!currentModalUser) return;
-    const u = currentModalUser;
-    const idRaw = u.idWhatsApp || '';
-    const telefone = idRaw.replace('@s.whatsapp.net', '').replace('@lid', '');
-    const copiavel = idRaw.includes('@lid') ? idRaw : telefone;
+    const idRaw = currentModalUser.idWhatsApp || '';
+    let telefone = ($('modal-telefone')?.textContent || '').trim();
+
+    if (!telefone || telefone === 'Carregando...') {
+      if (idRaw.endsWith('@lid')) {
+        try {
+          const resposta = await fetch(`${API}/user/telefone/${encodeURIComponent(idRaw)}`);
+          const dados = await resposta.json();
+          telefone = dados.telefone ? `+${String(dados.telefone).replace(/\\D/g, '')}` : '';
+        } catch {
+          telefone = '';
+        }
+      } else {
+        const numero = idRaw.replace('@s.whatsapp.net', '').replace(/\\D/g, '');
+        telefone = numero ? `+${numero}` : '';
+      }
+    }
+
+    if (!telefone || telefone === 'Carregando...') {
+      showToast('Número de telefone indisponível.');
+      return;
+    }
+
     try {
-      await navigator.clipboard.writeText(copiavel);
-      showToast('ID copiado: ' + copiavel);
+      await navigator.clipboard.writeText(telefone);
+      showToast('Telefone copiado: ' + telefone);
     } catch {
-      showToast('Não foi possível copiar.');
+      showToast('Não foi possível copiar o telefone.');
     }
   });
 
