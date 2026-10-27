@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Recuperar Conta — Tico Bot</title>
+  <link rel="stylesheet" href="login.css" />
+  <style>
+    .help-banner {
+      background: rgba(45, 226, 255, 0.08);
+      border: 1px solid rgba(45, 226, 255, 0.2);
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 20px;
+      font-size: 0.88rem;
+      color: #b0e8ff;
+      line-height: 1.45;
+    }
+    .help-banner strong {
+      color: #2de2ff;
+    }
+  </style>
+  <link rel="stylesheet" href="ios-glass.css" />
+</head>
+<body>
+  <div class="auth-wrapper">
+    <div class="auth-card">
+      <div class="auth-brand">
+        <span class="brand-emoji">🔑</span>
+        <h1>Recuperar Conta</h1>
+        <p class="brand-sub">Redefina sua senha usando seu WhatsApp</p>
+      </div>
+
+      <div class="help-banner">
+        💡 <strong>Como obter seu código:</strong> Digite <strong>!recuperar</strong> em qualquer grupo no WhatsApp onde o bot está presente. O código de 6 dígitos será enviado <strong>no próprio grupo</strong>!
+      </div>
+
+      <form id="recuperarForm" novalidate>
+        <div class="field-group">
+          <label for="idWhatsApp">Número do WhatsApp</label>
+          <input id="idWhatsApp" type="tel" placeholder="5511999999999"
+            autocomplete="tel" maxlength="15" required />
+          <span class="field-hint">DDI + DDD + número (ex: 5511999999999)</span>
+        </div>
+
+        <div class="field-group">
+          <label for="codigo">Código de 6 dígitos</label>
+          <input id="codigo" type="text" placeholder="123456"
+            maxlength="6" autocomplete="one-time-code" required />
+          <span class="field-hint">Código recebido no grupo ao digitar !recuperar</span>
+        </div>
+
+        <div class="field-group">
+          <label for="novaSenha">Nova Senha</label>
+          <div class="password-wrap">
+            <input id="novaSenha" type="password" placeholder="Mínimo 6 caracteres"
+              autocomplete="new-password" required />
+            <button type="button" class="toggle-pw" aria-label="Mostrar senha" tabindex="-1">👁️</button>
+          </div>
+        </div>
+
+        <div id="recuperarMsg" class="msg hidden"></div>
+
+        <button type="submit" class="btn-primary" id="btnRecuperar">
+          <span class="btn-label">Redefinir Senha</span>
+          <span class="btn-spinner hidden">⏳</span>
+        </button>
+      </form>
+
+      <p class="auth-footer">
+        Lembrou a senha? <a href="login.html">Voltar para o Login</a>
+      </p>
+    </div>
+  </div>
+
+  <script>
+    const API = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+      ? 'http://localhost:3000/api'
+      : 'https://whatsappbot2-130c.onrender.com/api';
+
+    const form   = document.getElementById('recuperarForm');
+    const btn    = document.getElementById('btnRecuperar');
+    const msgBox = document.getElementById('recuperarMsg');
+
+    document.querySelector('.toggle-pw').addEventListener('click', () => {
+      const inp = document.getElementById('novaSenha');
+      const show = inp.type === 'password';
+      inp.type = show ? 'text' : 'password';
+      document.querySelector('.toggle-pw').textContent = show ? '🙈' : '👁️';
+    });
+
+    function setLoading(on) {
+      btn.disabled = on;
+      btn.querySelector('.btn-label').classList.toggle('hidden', on);
+      btn.querySelector('.btn-spinner').classList.toggle('hidden', !on);
+    }
+
+    function showMsg(text, isError = true) {
+      msgBox.textContent = text;
+      msgBox.className = `msg ${isError ? 'msg--error' : 'msg--info'}`;
+      msgBox.classList.remove('hidden');
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      msgBox.classList.add('hidden');
+
+      const idWhatsApp = document.getElementById('idWhatsApp').value.trim();
+      const codigo     = document.getElementById('codigo').value.trim();
+      const novaSenha  = document.getElementById('novaSenha').value;
+
+      if (!idWhatsApp || !codigo || !novaSenha) {
+        showMsg('Preencha todos os campos.');
+        return;
+      }
+
+      if (novaSenha.length < 6) {
+        showMsg('A nova senha deve ter pelo menos 6 caracteres.');
+        return;
+      }
+
+      setLoading(true);
+      try {
+        const res = await fetch(`${API}/auth/recuperar`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ idWhatsApp, codigo, novaSenha }),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          showMsg(data.error || 'Erro ao redefinir senha.');
+          return;
+        }
+
+        showMsg('✅ ' + (data.message || 'Senha redefinida com sucesso! Redirecionando...'), false);
+        setTimeout(() => {
+          window.location.replace('login.html');
+        }, 2000);
+
+      } catch {
+        showMsg('Não foi possível conectar ao servidor. Tente novamente em instantes.');
+      } finally {
+        setLoading(false);
+      }
+    });
+  </script>
+</body>
+</html>
