@@ -559,7 +559,7 @@
 .odds-bar.bar-raro     { background: var(--purple); }
 .odds-bar.bar-incomum  { background: var(--blue); }
 .odds-bar.bar-comum    { background: var(--text-dim); }
-.odds-mult  { font-family: var(--font-mono); font-size: 13px; font-weight: 700; color: var(--gold); min-width: 36px; text-align: right; }
+.odds-mult  { font-family: var(--font-mono); font-size: 13px; font-weight: 700; color: var(--gold); min-width: 52px; text-align: right; white-space: nowrap; }
 .odds-tip {
   margin-top: 12px;
   font-size: 12px;

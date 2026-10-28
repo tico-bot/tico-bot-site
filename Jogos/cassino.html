@@ -42,6 +42,12 @@
         </a>
       </li>
       <li>
+        <a href="corrida.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12h18M3 6l9 6-9 6"/></svg>
+          <span>Corrida</span>
+        </a>
+      </li>
+      <li>
         <a href="../admin.html">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2l2.09 6.26H21l-5.47 3.97 2.09 6.26L12 14.52l-5.62 3.97 2.09-6.26L3 8.26h6.91z"/></svg>
           <span>Admin</span>
@@ -149,8 +155,10 @@
             type="number"
             id="aposta-input"
             placeholder="Valor da aposta…"
-            min="1"
+            min="10"
             max="100000"
+            step="1"
+            inputmode="numeric"
           />
         </div>
         <button class="btn-spin" id="btn-spin" disabled>
@@ -210,7 +218,9 @@
 <footer>Tico-bot · cassino · powered by Node.js + MongoDB</footer>
 
 <script>
-const API = 'https://tico-bot-6jpn.onrender.com/api';
+const API = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? 'http://localhost:3000/api'
+  : 'https://tico-bot-6jpn.onrender.com/api';
 
 /* ══════════════════════════════════════════════════════
    UTILS
@@ -229,11 +239,98 @@ function showToast(msg, tipo = 'normal') {
 }
 
 function fmtNum(n) {
-  return n != null ? Number(n).toLocaleString('pt-BR') : '—';
+  const value = Number(n);
+  return Number.isFinite(value) ? Math.trunc(value).toLocaleString('pt-BR') : '—';
+}
+
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replaceAll(String.fromCharCode(34), '&quot;')
+    .replaceAll(String.fromCharCode(39), '&#39;');
 }
 
 function getJwt() {
   return localStorage.getItem('jwt') || sessionStorage.getItem('piro_jwt') || null;
+}
+
+function prepararRequestId(jogo, payload) {
+  const key = 'tico-game-request-' + jogo;
+  const assinatura = JSON.stringify(payload);
+  let pendente = null;
+  try { pendente = JSON.parse(sessionStorage.getItem(key) || 'null'); } catch {}
+  if (pendente?.requestId) {
+    return pendente.assinatura === assinatura ? pendente.requestId : null;
+  }
+  if (!globalThis.crypto?.randomUUID) return null;
+  const requestId = crypto.randomUUID();
+  try {
+    sessionStorage.setItem(key, JSON.stringify({ requestId, assinatura }));
+    const salvo = JSON.parse(sessionStorage.getItem(key) || 'null');
+    if (salvo?.requestId !== requestId || salvo?.assinatura !== assinatura) return null;
+  } catch {
+    return null;
+  }
+  return requestId;
+}
+
+function limparRequestId(jogo, requestId) {
+  const key = 'tico-game-request-' + jogo;
+  try {
+    const pendente = JSON.parse(sessionStorage.getItem(key) || 'null');
+    if (pendente?.requestId === requestId) sessionStorage.removeItem(key);
+  } catch {}
+}
+
+async function liberarRodadaAposErro(jogo, requestId) {
+  try {
+    const jwt = getJwt();
+    if (!jwt) throw new Error('Sessão ausente.');
+    const statusResponse = await fetch(`${API}/games/request/${encodeURIComponent(requestId)}`, {
+      headers: { Authorization: `Bearer ${jwt}` }
+    });
+    const statusRodada = await statusResponse.json();
+    if (!statusResponse.ok || statusRodada.status !== 'completed' || statusRodada.httpStatus !== 500) {
+      throw new Error('O servidor ainda não confirmou que a rodada foi encerrada. Ela continua bloqueada para evitar uma cobrança duplicada.');
+    }
+
+    const response = await fetch(`${API}/games/wallet/${encodeURIComponent(grupoAtual)}`, {
+      headers: { Authorization: `Bearer ${jwt}` }
+    });
+    const data = await response.json();
+    if (!response.ok || data.idGrupo !== grupoAtual) {
+      throw new Error(data?.error || 'Não foi possível atualizar o saldo.');
+    }
+    const saldo = Number(data.gold);
+    if (!Number.isFinite(saldo) || saldo < 0) throw new Error('Saldo retornado é inválido.');
+
+    saldoAtual = Math.trunc(saldo);
+    const sel = $('grupo-select');
+    const opt = sel?.options?.[sel.selectedIndex];
+    if (opt) {
+      opt.dataset.gold = String(saldoAtual);
+      const nomeGrupo = opt.text.split(' — ')[0] || grupoAtual;
+      opt.text = `${nomeGrupo} — ${fmtNum(saldoAtual)} 💰`;
+    }
+    const saldoEl = $('saldo-val');
+    if (saldoEl) saldoEl.textContent = fmtNum(saldoAtual) + ' gold';
+
+    const liberar = window.confirm(
+      `A rodada anterior retornou erro. Atualizei o saldo do grupo para ${fmtNum(saldoAtual)} gold. Confira o saldo e o histórico antes de continuar. Deseja liberar uma nova aposta?`
+    );
+    if (liberar) {
+      limparRequestId(jogo, requestId);
+      validarAposta();
+      showToast('Saldo atualizado. Nova rodada liberada.');
+    } else {
+      showToast('A rodada anterior continua bloqueada para evitar cobrança duplicada.', 'lose');
+    }
+  } catch (error) {
+    console.error('[Jogo] Não foi possível confirmar o saldo após erro:', error);
+    showToast('Não consegui confirmar o saldo. A rodada continua bloqueada por segurança; tente novamente quando a conexão voltar.', 'lose');
+  }
 }
 
 
@@ -354,12 +451,35 @@ async function carregarGrupos() {
       '<option value="">Selecione um grupo…</option>' +
       data.grupos
         .sort((a, b) => (b.gold ?? 0) - (a.gold ?? 0))
-        .map(g => `<option value="${g.jid}" data-gold="${g.gold ?? 0}">${g.nome} — ${fmtNum(g.gold ?? 0)} 💰</option>`)
+        .map(g => {
+          const jid = typeof g.jid === 'string' ? g.jid : '';
+          const gold = Number.isSafeInteger(Number(g.gold)) && Number(g.gold) >= 0 ? Number(g.gold) : 0;
+          return `<option value="${escapeHtml(jid)}" data-gold="${gold}">${escapeHtml(g.nome || jid)} — ${fmtNum(gold)} 💰</option>`;
+        })
         .join('');
 
   } catch {
     sel.innerHTML = '<option value="">Erro ao carregar grupos</option>';
   }
+}
+
+/* ══════════════════════════════════════════════════════
+   VALIDAÇÃO DA APOSTA
+══════════════════════════════════════════════════════ */
+function parseApostaInput() {
+  const raw = String($('aposta-input')?.value ?? '').trim();
+  if (!/^\d+$/.test(raw)) return null;
+  const value = Number(raw);
+  return Number.isSafeInteger(value) ? value : null;
+}
+
+function validarAposta() {
+  const value = parseApostaInput();
+  const valid = Boolean(grupoAtual) && !spinning && value !== null
+    && value >= 10 && value <= 100_000 && value <= saldoAtual;
+  const btn = $('btn-spin');
+  if (btn) btn.disabled = !valid;
+  return valid;
 }
 
 /* ══════════════════════════════════════════════════════
@@ -388,7 +508,9 @@ function onGrupoChange() {
     paytable.style.display    = 'block';
     histCard.style.display    = 'block';
     $('saldo-val').textContent = fmtNum(saldoAtual) + ' gold';
-    btnSpin.disabled = false;
+    sessionHistory = [];
+    $('history-list').replaceChildren();
+    validarAposta();
     $('slot-status').textContent = 'Defina sua aposta e gire!';
     $('slot-status').className   = 'slot-status';
   } else {
@@ -613,9 +735,9 @@ async function girar() {
   if (spinning || !grupoAtual) return;
 
   const jwt    = getJwt();
-  const aposta = parseInt($('aposta-input').value, 10);
+  const aposta = parseApostaInput();
 
-  if (!aposta || aposta < 10) {
+  if (aposta === null || aposta < 10) {
     showToast('Aposta mínima: 10 gold!');
     return;
   }
@@ -625,6 +747,13 @@ async function girar() {
   }
   if (aposta > 100_000) {
     showToast('Aposta máxima: 100.000 gold');
+    return;
+  }
+
+  const payloadAposta = { idGrupo: grupoAtual, aposta };
+  const requestId = prepararRequestId('slots', payloadAposta);
+  if (!requestId) {
+    showToast('Existe uma rodada anterior sem confirmação. Use os mesmos dados para consultar o resultado.', 'lose');
     return;
   }
 
@@ -651,34 +780,58 @@ async function girar() {
         'Content-Type': 'application/json',
         Authorization:  `Bearer ${jwt}`,
       },
-      body: JSON.stringify({ idGrupo: grupoAtual, aposta }),
+      body: JSON.stringify({ ...payloadAposta, requestId }),
     });
     apiData = await res.json();
 
     if (!res.ok) {
+      if (res.status === 500) {
+        await animPromise;
+        spinning = false;
+        btnSpin.textContent = '🎰 Girar';
+        showToast(apiData?.error || 'O servidor encontrou um erro. Vou conferir o saldo antes de liberar outra rodada.', 'lose');
+        await liberarRodadaAposErro('slots', requestId);
+        validarAposta();
+        return;
+      }
+      if (res.status !== 409) limparRequestId('slots', requestId);
       await animPromise;
       if (res.status === 401) {
         sessionStorage.removeItem('piro_jwt');
+        localStorage.removeItem('jwt');
         showToast('Sessão expirada. Faça login novamente.', 'lose');
-        setTimeout(() => { window.location.href = 'perfil.html'; }, 2000);
+        setTimeout(() => { window.location.href = '../perfil.html'; }, 2000);
       } else if (res.status === 429) {
         showToast(apiData?.error || 'Muitos giros! Aguarde um momento.', 'lose');
       } else {
         showToast(apiData?.error || 'Erro ao girar!', 'lose');
       }
       spinning = false;
-      btnSpin.disabled  = false;
       btnSpin.textContent = '🎰 Girar';
+      validarAposta();
       return;
     }
   } catch {
     await animPromise;
-    showToast('Erro de conexão. Tente novamente.', 'lose');
+    showToast('Erro de conexão. Confira o saldo antes de tentar novamente.', 'lose');
     spinning = false;
-    btnSpin.disabled  = false;
     btnSpin.textContent = '🎰 Girar';
+    validarAposta();
     return;
   }
+
+  if (!apiData || !Array.isArray(apiData.resultado) || apiData.resultado.length !== 3
+      || !Number.isFinite(Number(apiData.saldoFinal))
+      || !Number.isFinite(Number(apiData.lucroLiq))) {
+    await animPromise;
+    showToast('Resposta inesperada do servidor. Confira o saldo antes de tentar novamente.', 'lose');
+    spinning = false;
+    btnSpin.textContent = '🎰 Girar';
+    validarAposta();
+    return;
+  }
+
+  limparRequestId('slots', requestId);
 
   /* Espera animação base terminar, depois anima com resultado real */
   await animPromise;
@@ -689,8 +842,8 @@ async function girar() {
   mostrarResultado(apiData);
 
   spinning = false;
-  btnSpin.disabled  = false;
   btnSpin.textContent = '🎰 Girar';
+  validarAposta();
 
   /* Toast */
   const isWin = apiData.lucroLiq > 0;
@@ -763,9 +916,12 @@ document.querySelectorAll('.quick-bet').forEach(btn => {
     if (!input) return;
     if (val === 'max')                          input.value = saldoAtual;
     else if (val === 'repeat' && ultimaAposta)  input.value = Math.min(ultimaAposta, saldoAtual);
-    else                                        input.value = Math.min(parseInt(val), saldoAtual);
+    else                                        input.value = Math.min(parseInt(val, 10), saldoAtual);
+    validarAposta();
   });
 });
+
+$('aposta-input')?.addEventListener('input', validarAposta);
 
 /* Enter no input dispara o giro */
 $('aposta-input')?.addEventListener('keydown', e => {

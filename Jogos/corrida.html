@@ -151,8 +151,10 @@
             type="number"
             id="aposta-input"
             placeholder="Valor da aposta…"
-            min="1"
+            min="10"
             max="100000"
+            step="1"
+            inputmode="numeric"
           />
         <p class="aposta-hint" id="aposta-hint"></p>
         </div>
@@ -213,15 +215,18 @@
 <footer>Tico-bot · corrida de bichos · powered by Node.js + MongoDB</footer>
 
 <script>
-const API = 'https://tico-bot-6jpn.onrender.com/api';
+const API = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? 'http://localhost:3000/api'
+  : 'https://tico-bot-6jpn.onrender.com/api';
 
+// Odds alinhadas às probabilidades do servidor (peso / 37), com retorno teórico ~90%.
 const BICHOS = [
-  { idx: 0, nome: '🐎 Cavalo',    emoji: '🐎', odds: 2.0, velocidade: 9, cor: '#ffffff' },
-  { idx: 1, nome: '🐅 Tigre',     emoji: '🐅', odds: 2.5, velocidade: 8, cor: '#ffffff' },
-  { idx: 2, nome: '🦊 Raposa',    emoji: '🦊', odds: 3.0, velocidade: 7, cor: '#ffffff' },
-  { idx: 3, nome: '🐕 Cachorro',  emoji: '🐕', odds: 3.5, velocidade: 6, cor: '#ffffff' },
-  { idx: 4, nome: '🐗 Javali',    emoji: '🐗', odds: 4.0, velocidade: 5, cor: '#ffffff' },
-  { idx: 5, nome: '🐢 Tartaruga', emoji: '🐢', odds: 8.0, velocidade: 2, cor: '#ffffff' },
+  { idx: 0, nome: '🐎 Cavalo',    emoji: '🐎', odds: 3.70, velocidade: 9, cor: '#ffffff' },
+  { idx: 1, nome: '🐅 Tigre',     emoji: '🐅', odds: 4.16, velocidade: 8, cor: '#ffffff' },
+  { idx: 2, nome: '🦊 Raposa',    emoji: '🦊', odds: 4.76, velocidade: 7, cor: '#ffffff' },
+  { idx: 3, nome: '🐕 Cachorro',  emoji: '🐕', odds: 5.55, velocidade: 6, cor: '#ffffff' },
+  { idx: 4, nome: '🐗 Javali',    emoji: '🐗', odds: 6.66, velocidade: 5, cor: '#ffffff' },
+  { idx: 5, nome: '🐢 Tartaruga', emoji: '🐢', odds: 16.65, velocidade: 2, cor: '#ffffff' },
 ];
 
 const PISTA_LEN = 18;
@@ -243,13 +248,106 @@ function showToast(msg, tipo = 'normal') {
 }
 
 function fmtNum(n) {
-  return n != null ? Number(n).toLocaleString('pt-BR') : '—';
+  const value = Number(n);
+  return Number.isFinite(value) ? Math.trunc(value).toLocaleString('pt-BR') : '—';
+}
+
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replaceAll(String.fromCharCode(34), '&quot;')
+    .replaceAll(String.fromCharCode(39), '&#39;');
 }
 
 function getJwt() {
   return localStorage.getItem('jwt') || sessionStorage.getItem('piro_jwt') || null;
 }
 
+function prepararRequestId(jogo, payload) {
+  const key = 'tico-game-request-' + jogo;
+  const assinatura = JSON.stringify(payload);
+  let pendente = null;
+  try { pendente = JSON.parse(sessionStorage.getItem(key) || 'null'); } catch {}
+  if (pendente?.requestId) {
+    return pendente.assinatura === assinatura ? pendente.requestId : null;
+  }
+  if (!globalThis.crypto?.randomUUID) return null;
+  const requestId = crypto.randomUUID();
+  try {
+    sessionStorage.setItem(key, JSON.stringify({ requestId, assinatura }));
+    const salvo = JSON.parse(sessionStorage.getItem(key) || 'null');
+    if (salvo?.requestId !== requestId || salvo?.assinatura !== assinatura) return null;
+  } catch {
+    return null;
+  }
+  return requestId;
+}
+
+function limparRequestId(jogo, requestId) {
+  const key = 'tico-game-request-' + jogo;
+  try {
+    const pendente = JSON.parse(sessionStorage.getItem(key) || 'null');
+    if (pendente?.requestId === requestId) sessionStorage.removeItem(key);
+  } catch {}
+}
+
+async function liberarRodadaAposErro(jogo, requestId) {
+  try {
+    const jwt = getJwt();
+    if (!jwt) throw new Error('Sessão ausente.');
+    const statusResponse = await fetch(`${API}/games/request/${encodeURIComponent(requestId)}`, {
+      headers: { Authorization: `Bearer ${jwt}` }
+    });
+    const statusRodada = await statusResponse.json();
+    if (!statusResponse.ok || statusRodada.status !== 'completed' || statusRodada.httpStatus !== 500) {
+      throw new Error('O servidor ainda não confirmou que a rodada foi encerrada. Ela continua bloqueada para evitar uma cobrança duplicada.');
+    }
+
+    const response = await fetch(`${API}/games/wallet/${encodeURIComponent(grupoAtual)}`, {
+      headers: { Authorization: `Bearer ${jwt}` }
+    });
+    const data = await response.json();
+    if (!response.ok || data.idGrupo !== grupoAtual) {
+      throw new Error(data?.error || 'Não foi possível atualizar o saldo.');
+    }
+    const saldo = Number(data.gold);
+    if (!Number.isFinite(saldo) || saldo < 0) throw new Error('Saldo retornado é inválido.');
+
+    saldoAtual = Math.trunc(saldo);
+    const sel = $('grupo-select');
+    const opt = sel?.options?.[sel.selectedIndex];
+    if (opt) {
+      opt.dataset.gold = String(saldoAtual);
+      const nomeGrupo = opt.text.split(' — ')[0] || grupoAtual;
+      opt.text = `${nomeGrupo} — ${fmtNum(saldoAtual)} 💰`;
+    }
+    const saldoEl = $('saldo-val');
+    if (saldoEl) saldoEl.textContent = fmtNum(saldoAtual) + ' gold';
+
+    const liberar = window.confirm(
+      `A rodada anterior retornou erro. Atualizei o saldo do grupo para ${fmtNum(saldoAtual)} gold. Confira o saldo e o histórico antes de continuar. Deseja liberar uma nova aposta?`
+    );
+    if (liberar) {
+      limparRequestId(jogo, requestId);
+      validarAposta();
+      showToast('Saldo atualizado. Nova rodada liberada.');
+    } else {
+      showToast('A rodada anterior continua bloqueada para evitar cobrança duplicada.', 'lose');
+    }
+  } catch (error) {
+    console.error('[Jogo] Não foi possível confirmar o saldo após erro:', error);
+    showToast('Não consegui confirmar o saldo. A rodada continua bloqueada por segurança; tente novamente quando a conexão voltar.', 'lose');
+  }
+}
+
+function parseApostaInput() {
+  const raw = String($('aposta-input')?.value ?? '').trim();
+  if (!/^\d+$/.test(raw)) return null;
+  const value = Number(raw);
+  return Number.isSafeInteger(value) ? value : null;
+}
 
 /* ══════════════════════════════════════════════════════
    ESTADO
@@ -365,6 +463,15 @@ function buildBichosGrid() {
   }).join('');
 }
 
+function validarAposta() {
+  const aposta = parseApostaInput();
+  const valid = Boolean(grupoAtual) && bichoEscolhido !== null && !correndo
+    && aposta !== null && aposta >= 10 && aposta <= 100_000 && aposta <= saldoAtual;
+  const btn = $('btn-correr');
+  if (btn) btn.disabled = !valid;
+  return valid;
+}
+
 function selecionarBicho(idx) {
   if (correndo) return;
   bichoEscolhido = idx;
@@ -373,8 +480,7 @@ function selecionarBicho(idx) {
     c.classList.toggle('selected', parseInt(c.dataset.idx) === idx);
   });
 
-  const btnCorrer = $('btn-correr');
-  if (btnCorrer && grupoAtual) btnCorrer.disabled = false;
+  validarAposta();
 
   const pill = $('status-pill');
   if (pill) {
@@ -556,13 +662,12 @@ async function apostar() {
   const jwt    = getJwt();
   if (!jwt) {
     showToast('Sessão expirada. Faça login novamente.', 'lose');
-    setTimeout(() => { window.location.href = 'perfil.html'; }, 1500);
+    setTimeout(() => { window.location.href = '../perfil.html'; }, 1500);
     return;
   }
 
-  // Sanitiza aposta: força inteiro positivo, ignora qualquer manipulação
-  const apostaRaw = parseInt($('aposta-input').value, 10);
-  const aposta    = Number.isFinite(apostaRaw) ? Math.abs(Math.floor(apostaRaw)) : 0;
+  // Aceita somente inteiros positivos, sem truncar decimais ou texto anexado.
+  const aposta = parseApostaInput();
 
   // Sanitiza bicho: só aceita índices válidos do array BICHOS
   const escolha = Number.isInteger(bichoEscolhido) && bichoEscolhido >= 0 && bichoEscolhido < BICHOS.length
@@ -578,6 +683,13 @@ async function apostar() {
   if (aposta > 100_000) { hint.textContent = 'Máximo: 100.000 gold'; inp.classList.add('err'); return; }
   hint.textContent = ''; inp.classList.remove('err');
 
+  const payloadAposta = { idGrupo: grupoAtual, escolha, aposta };
+  const requestId = prepararRequestId('corrida', payloadAposta);
+  if (!requestId) {
+    showToast('Existe uma rodada anterior sem confirmação. Use os mesmos dados para consultar o resultado.', 'lose');
+    return;
+  }
+
   correndo = true;
   const btnCorrer = $('btn-correr');
   btnCorrer.disabled    = true;
@@ -592,39 +704,76 @@ async function apostar() {
 
   resetPista();
 
-  let apiData = null;
-  const [res] = await Promise.all([
-    fetch(`${API}/corrida/apostar`, {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${jwt}` },
-      body: JSON.stringify({ idGrupo: grupoAtual, escolha: bichoEscolhido, aposta }),
-    }).then(r => r.json().then(d => ({ ok: r.ok, status: r.status, data: d }))),
-    new Promise(r => setTimeout(r, 500)),
-  ]);
-
-  if (!res.ok) {
+  let res;
+  try {
+    [res] = await Promise.all([
+      fetch(`${API}/corrida/apostar`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${jwt}` },
+        body: JSON.stringify({ ...payloadAposta, requestId }),
+      }).then(async response => {
+        let data = {};
+        try { data = await response.json(); } catch {}
+        return { ok: response.ok, status: response.status, data };
+      }),
+      new Promise(resolve => setTimeout(resolve, 500)),
+    ]);
+  } catch (error) {
     correndo = false;
-    btnCorrer.disabled  = false;
     btnCorrer.textContent = '🏁 Apostar';
-    if (res.status === 401) {
-      sessionStorage.removeItem('piro_jwt');
-      showToast('Sessão expirada. Faça login novamente.', 'lose');
-      setTimeout(() => { window.location.href = 'perfil.html'; }, 2000);
-    } else {
-      showToast(res.data?.error || 'Erro ao apostar!', 'lose');
-    }
+    showToast('Falha de conexão. Confira o saldo antes de apostar de novo.', 'lose');
+    validarAposta();
+    console.error('[Corrida] Falha na requisição:', error);
     return;
   }
 
-  apiData = res.data;
+  if (!res.ok) {
+    correndo = false;
+    btnCorrer.textContent = '🏁 Apostar';
+    if (res.status === 500) {
+      showToast(res.data?.error || 'O servidor encontrou um erro. Vou conferir o saldo antes de liberar outra rodada.', 'lose');
+      await liberarRodadaAposErro('corrida', requestId);
+      validarAposta();
+      return;
+    }
+    if (res.status !== 409) limparRequestId('corrida', requestId);
+    if (res.status === 401) {
+      sessionStorage.removeItem('piro_jwt');
+      localStorage.removeItem('jwt');
+      showToast('Sessão expirada. Faça login novamente.', 'lose');
+      setTimeout(() => { window.location.href = '../perfil.html'; }, 2000);
+    } else {
+      showToast(res.data?.error || 'Erro ao apostar!', 'lose');
+    }
+    validarAposta();
+    return;
+  }
 
-  await animarCorrida(apiData.vencedorIdx, bichoEscolhido);
+  const apiData = res.data;
+  if (!apiData || !Number.isInteger(apiData.vencedorIdx)
+      || apiData.vencedorIdx < 0 || apiData.vencedorIdx >= BICHOS.length
+      || !Number.isFinite(Number(apiData.saldoFinal))
+      || !Number.isFinite(Number(apiData.lucroLiq))) {
+    correndo = false;
+    btnCorrer.textContent = '🏁 Apostar';
+    showToast('Resposta inesperada do servidor. Confira o saldo antes de tentar novamente.', 'lose');
+    validarAposta();
+    return;
+  }
 
-  mostrarResultado({ ...apiData, escolhaIdx: bichoEscolhido });
+  limparRequestId('corrida', requestId);
+
+  try {
+    await animarCorrida(apiData.vencedorIdx, bichoEscolhido);
+    mostrarResultado({ ...apiData, escolhaIdx: bichoEscolhido });
+  } catch (error) {
+    console.error('[Corrida] Erro ao exibir o resultado:', error);
+    showToast('A aposta foi processada, mas a animação falhou. Confira o saldo.', 'lose');
+  }
 
   correndo = false;
-  btnCorrer.disabled  = false;
   btnCorrer.textContent = '🏁 Apostar';
+  validarAposta();
 
   showToast(
     apiData.ganhou
@@ -666,8 +815,12 @@ async function carregarGrupos() {
     sel.innerHTML =
       '<option value="">Selecione um grupo…</option>' +
       data.grupos
-        .sort((a, b) => (b.gold ?? 0) - (a.gold ?? 0))
-        .map(g => `<option value="${g.jid}" data-gold="${g.gold ?? 0}">${g.nome} — ${fmtNum(g.gold ?? 0)} 💰</option>`)
+        .sort((a, b) => (Number(b.gold) || 0) - (Number(a.gold) || 0))
+        .map(g => {
+          const jid = typeof g.jid === 'string' ? g.jid : '';
+          const gold = Number.isSafeInteger(Number(g.gold)) && Number(g.gold) >= 0 ? Number(g.gold) : 0;
+          return `<option value="${escapeHtml(jid)}" data-gold="${gold}">${escapeHtml(g.nome || jid)} — ${fmtNum(gold)} 💰</option>`;
+        })
         .join('');
   } catch {
     sel.innerHTML = '<option value="">Erro ao carregar grupos</option>';
@@ -705,7 +858,14 @@ function onGrupoChange() {
 
     document.querySelectorAll('.bicho-card').forEach(c => c.classList.remove('selected'));
     resetPista();
+  } else {
+    bichoEscolhido = null;
+    document.querySelectorAll('.bicho-card').forEach(c => c.classList.remove('selected'));
+    $('corrida-status').textContent = 'Selecione um grupo para jogar.';
+    $('corrida-result').classList.remove('show', 'result-win', 'result-lose');
+    resetPista();
   }
+  validarAposta();
 }
 
 /* ══════════════════════════════════════════════════════
@@ -717,7 +877,8 @@ $('aposta-input')?.addEventListener('keydown', e => { if (e.key === 'Enter') apo
 $('aposta-input')?.addEventListener('input', () => {
   $('aposta-hint').textContent = '';
   $('aposta-input').classList.remove('err');
-  const v = parseInt($('aposta-input').value, 10);
+  const v = parseApostaInput();
+  validarAposta();
   document.querySelectorAll('.quick-bet').forEach(b => {
     const bv = parseInt(b.dataset.val, 10);
     b.classList.toggle('active', bv === v);
@@ -750,6 +911,7 @@ document.querySelectorAll('.quick-bet').forEach(btn => {
     $('aposta-hint').textContent = '';
     $('aposta-input').classList.remove('err');
     document.querySelectorAll('.quick-bet').forEach(b => b.classList.toggle('active', b === btn));
+    validarAposta();
   });
 });
 
