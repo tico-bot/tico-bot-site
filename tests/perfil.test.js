@@ -28,6 +28,8 @@ function createContext(options = {}) {
       contains(value) { return this.values.has(value); },
     },
     replaceChildren() { this.innerHTML = ''; this.textContent = ''; },
+    listeners: new Map(),
+    addEventListener(event, handler) { this.listeners.set(event, handler); },
     getContext() { return {}; },
   });
   const storage = () => ({
@@ -221,4 +223,40 @@ test('processa um link mágico uma única vez e renderiza o perfil autenticado',
   assert.equal(context.localStorage.getItem('jwt'), null);
   assert.equal(elements.get('painel').classList.contains('hidden'), false);
   assert.equal(elements.get('perfil-nome').textContent, 'Usuário');
+});
+
+
+test('salva nome de exibição, atualiza o cabeçalho e as iniciais do avatar', async () => {
+  const chamadas = [];
+  const { context, elements } = createContext({
+    fetchImpl: async (url, options = {}) => {
+      chamadas.push({ url: String(url), options });
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({ displayName: 'Nome Personalizado' }),
+      };
+    },
+  });
+  context.localStorage.setItem('jwt', 'jwt-da-conta');
+  context.document.getElementById('display-name-input').value = '  Nome Personalizado  ';
+  await elements.get('save-display-name').listeners.get('click')();
+
+  assert.equal(chamadas.length, 1);
+  assert.match(chamadas[0].url, /\/user\/display-name$/);
+  assert.equal(chamadas[0].options.method, 'PATCH');
+  assert.equal(chamadas[0].options.headers.Authorization, 'Bearer jwt-da-conta');
+  assert.deepEqual(JSON.parse(chamadas[0].options.body), { displayName: 'Nome Personalizado' });
+  assert.equal(elements.get('perfil-nome').textContent, 'Nome Personalizado');
+  assert.equal(elements.get('avatar-iniciais').textContent, 'NP');
+  assert.equal(context.document.getElementById('display-name-input').value, 'Nome Personalizado');
+  assert.equal(elements.get('display-name-msg').textContent, 'Nome atualizado!');
+  assert.equal(elements.get('save-display-name').disabled, false);
+});
+
+test('não tenta salvar o nome de exibição quando não há sessão', async () => {
+  const { context, elements } = createContext();
+  context.document.getElementById('display-name-input').value = 'Novo nome';
+  await elements.get('save-display-name').listeners.get('click')();
+  assert.equal(elements.get('display-name-msg').textContent, 'Sua sessão expirou. Entre novamente.');
 });
