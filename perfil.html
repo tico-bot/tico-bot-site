@@ -211,29 +211,6 @@
       ? 'http://localhost:3000/api'
       : 'https://tico-bot-6jpn.onrender.com/api';
 
-    (function checkTokenAutoLogin() {
-      const params = new URLSearchParams(window.location.search);
-      const token = params.get('token');
-      if (token) {
-        fetch(`${API}/auth/token`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ token }),
-        })
-          .then(res => res.json())
-          .then(data => {
-            if (data.jwt) {
-              localStorage.setItem('jwt', data.jwt);
-              sessionStorage.setItem('piro_jwt', data.jwt);
-              const cleanUrl = window.location.origin + window.location.pathname;
-              window.history.replaceState({}, document.title, cleanUrl);
-              window.location.reload();
-            }
-          })
-          .catch(err => console.error('Erro no auto-login:', err));
-      }
-    })();
-
     const $    = id => document.getElementById(id);
     const show = id => $(id).classList.remove('hidden');
     const hide = id => $(id).classList.add('hidden');
@@ -263,22 +240,33 @@
     }
 
     function fmtNum(n) {
-      if (n == null) return '0';
-      if (n >= 1e9) return (n / 1e9).toFixed(1).replace(/\.0$/, '') + 'B';
-      if (n >= 1e6) return (n / 1e6).toFixed(1).replace(/\.0$/, '') + 'M';
-      if (n >= 1e3) return (n / 1e3).toFixed(1).replace(/\.0$/, '') + 'k';
-      return n.toLocaleString('pt-BR');
-    }
-
-    function fmtItemNome(chave) {
-      return chave
-        .replace(/_/g, ' ')
-        .replace(/\b\w/g, l => l.toUpperCase());
+      const valor = Number(n);
+      if (!Number.isFinite(valor)) return '0';
+      const absoluto = Math.abs(valor);
+      const compactar = (divisor, sufixo) =>
+        `${(valor / divisor).toFixed(1).replace(/\.0$/, '')}${sufixo}`;
+      if (absoluto >= 1e9) return compactar(1e9, 'B');
+      if (absoluto >= 1e6) return compactar(1e6, 'M');
+      if (absoluto >= 1e3) return compactar(1e3, 'k');
+      return valor.toLocaleString('pt-BR', { maximumFractionDigits: 1 });
     }
 
     function fmtData(iso) {
       if (!iso) return null;
-      return new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
+
+      // Datas sem horário são datas de calendário: não devem voltar um dia por fuso UTC.
+      if (typeof iso === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(iso)) {
+        const [ano, mes, dia] = iso.split('-').map(Number);
+        const dataCalendario = new Date(ano, mes - 1, dia);
+        if (dataCalendario.getFullYear() !== ano || dataCalendario.getMonth() !== mes - 1 || dataCalendario.getDate() !== dia) {
+          return null;
+        }
+        return dataCalendario.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
+      }
+
+      const data = new Date(iso);
+      if (Number.isNaN(data.getTime())) return null;
+      return data.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
     }
 
     function escapeHtml(str) {
@@ -296,18 +284,24 @@
 
     function renderChartXP(xpHistory) {
       if (chartXP) { chartXP.destroy(); chartXP = null; }
+      const canvas = $('chart-xp');
+      if (!canvas || typeof Chart === 'undefined') return;
+
+      const historico = xpHistory && typeof xpHistory === 'object' && !Array.isArray(xpHistory)
+        ? xpHistory
+        : {};
       const hoje   = new Date();
+      hoje.setUTCHours(0, 0, 0, 0);
       const labels = [];
       const dados  = [];
+      const nomesMes = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
       for (let i = 29; i >= 0; i--) {
-        const d    = new Date(hoje);
-        d.setDate(d.getDate() - i);
+        const d = new Date(hoje);
+        d.setUTCDate(d.getUTCDate() - i);
         const chave = d.toISOString().slice(0, 10);
-        const [ano, mes, dia] = chave.split('-').map(Number);
-        const nomesMes = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
-        labels.push(`${dia} ${nomesMes[mes - 1]}`);
-        const val = xpHistory[chave] ?? 0;
-        dados.push(val >= 1 ? Math.round(val) : 0);
+        labels.push(`${d.getUTCDate()} ${nomesMes[d.getUTCMonth()]}`);
+        const valor = Number(historico[chave] ?? 0);
+        dados.push(Number.isFinite(valor) && valor > 0 ? Math.round(valor) : 0);
       }
       chartXP = new Chart($('chart-xp').getContext('2d'), {
         type: 'line',
@@ -358,9 +352,15 @@
 
     function renderChartAtividade(atividadeSemanal) {
       if (chartAtividade) { chartAtividade.destroy(); chartAtividade = null; }
-      const dias  = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-      const dados = Array.isArray(atividadeSemanal) ? atividadeSemanal : Array(7).fill(0);
-      chartAtividade = new Chart($('chart-atividade').getContext('2d'), {
+      const canvas = $('chart-atividade');
+      if (!canvas || typeof Chart === 'undefined') return;
+      const dias = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+      const origem = Array.isArray(atividadeSemanal) ? atividadeSemanal : [];
+      const dados = Array.from({ length: 7 }, (_, i) => {
+        const valor = Number(origem[i] ?? 0);
+        return Number.isFinite(valor) && valor > 0 ? valor : 0;
+      });
+      chartAtividade = new Chart(canvas.getContext('2d'), {
         type: 'bar',
         data: {
           labels: dias,
@@ -428,11 +428,11 @@
         <div class="rel-card">
           <div class="rel-ring-icon">${tipoEmoji}</div>
           <div class="rel-info">
-            <div class="rel-nome">${escapeHtml(nomeParceiro)} ${telParceiro ? `<span class="rel-tel">(${telParceiro})</span>` : ''}</div>
+            <div class="rel-nome">${escapeHtml(nomeParceiro)} ${telParceiro ? `<span class="rel-tel">(${escapeHtml(telParceiro)})</span>` : ''}</div>
             <div class="rel-tipo">${tipoLabel}</div>
             <div class="rel-meta">
               ${desdeData ? `<span>📅 Desde ${desdeData}</span>` : ''}
-              ${duracao ? `<span class="rel-badge-duracao">⏳ ${duracao}</span>` : ''}
+              ${duracao ? `<span class="rel-badge-duracao">⏳ ${escapeHtml(duracao)}</span>` : ''}
             </div>
             ${nomeGrupo ? `<div class="rel-grupo-info">${nomeGrupo}</div>` : ''}
           </div>
@@ -440,92 +440,108 @@
     }
 
     function renderPet(pet) {
-  const card  = $('pet-card');
-  const vazio = $('pet-vazio');
+      const card = $('pet-card');
+      if (!card) return;
 
-  if (!pet || (!pet.nome && !pet.name)) {
-    show('pet-vazio');
-    return;
-  }
+      if (!pet || (!pet.nome && !pet.name)) {
+        card.replaceChildren();
+        show('pet-vazio');
+        return;
+      }
 
-  hide('pet-vazio');
+      hide('pet-vazio');
+      const nomePet = pet.nome ?? pet.name;
+      const tipoPet = typeof pet.type === 'string' && pet.type.trim() ? pet.type : '🐾';
+      const raridade = typeof pet.rarity === 'string' && pet.rarity.trim()
+        ? pet.rarity.trim()
+        : 'Comum';
+      const nivelRaw = Number(pet.level);
+      const nivelPet = Number.isFinite(nivelRaw) && nivelRaw >= 1 ? Math.floor(nivelRaw) : 1;
 
-  const nomePet = pet.nome ?? pet.name;
+      const barraHtml = (label, valorOriginal, max, cor) => {
+        const numero = Number(valorOriginal);
+        const valor = Number.isFinite(numero) ? Math.min(max, Math.max(0, numero)) : 0;
+        const pct = Math.round((valor / max) * 100);
+        return `
+          <div class="pet-stat-row">
+            <span class="pet-stat-label">${label}</span>
+            <div class="pet-barra-outer">
+              <div class="pet-barra-inner" style="width:${pct}%;background:${cor};"></div>
+            </div>
+            <span class="pet-stat-num">${fmtNum(valor)}/${max}</span>
+          </div>`;
+      };
 
-  const barraHtml = (label, val, max, cor) => {
-    const pct = Math.min(100, Math.max(0, Math.round((val / max) * 100)));
-    return `
-      <div class="pet-stat-row">
-        <span class="pet-stat-label">${label}</span>
-        <div class="pet-barra-outer">
-          <div class="pet-barra-inner" style="width:${pct}%;background:${cor};"></div>
-        </div>
-        <span class="pet-stat-num">${val}/${max}</span>
-      </div>`;
-  };
+      const rarityColor = {
+        comum:    '#a0a3b4',
+        incomum:  '#00ffb0',
+        raro:     '#60a5ff',
+        epico:    '#b855ff',
+        lendario: '#ffd060',
+      };
+      const cor = rarityColor[raridade.toLowerCase()] || '#a0a3b4';
 
-  const rarityColor = {
-    comum:    '#a0a3b4',
-    incomum:  '#00ffb0',
-    raro:     '#60a5ff',
-    epico:    '#b855ff',
-    lendario: '#ffd060',
-  };
-  const cor = rarityColor[(pet.rarity || '').toLowerCase()] || '#a0a3b4';
-
-  card.innerHTML = `
-    <div class="pet-card-wrap">
-      <div class="pet-avatar" style="border-color:${cor};box-shadow:0 0 18px ${cor}33;">
-        ${pet.type || '🐾'}
-      </div>
-      <div class="pet-info">
-        <div class="pet-nome">${nomePet}</div>
-        <div class="pet-meta">
-          <span class="pet-badge" style="color:${cor};border-color:${cor}33;background:${cor}11;">
-            ${(pet.rarity || 'Comum')}
-          </span>
-          <span class="pet-nivel">Nível ${pet.level ?? 1}</span>
-        </div>
-        <div class="pet-barras">
-          ${barraHtml('❤️ Vida',     pet.energy    ?? 100, 100, '#ff6482')}
-          ${barraHtml('🍖 Fome',     pet.fullness  ?? 100, 100, '#ffd060')}
-          ${barraHtml('😊 Humor',    pet.happiness ?? 100, 100, '#00ffb0')}
-        </div>
-      </div>
-    </div>`;
-}
+      card.innerHTML = `
+        <div class="pet-card-wrap">
+          <div class="pet-avatar" style="border-color:${cor};box-shadow:0 0 18px ${cor}33;">
+            ${escapeHtml(tipoPet)}
+          </div>
+          <div class="pet-info">
+            <div class="pet-nome">${escapeHtml(nomePet)}</div>
+            <div class="pet-meta">
+              <span class="pet-badge" style="color:${cor};border-color:${cor}33;background:${cor}11;">
+                ${escapeHtml(raridade)}
+              </span>
+              <span class="pet-nivel">Nível ${nivelPet}</span>
+            </div>
+            <div class="pet-barras">
+              ${barraHtml('❤️ Vida', pet.energy ?? 100, 100, '#ff6482')}
+              ${barraHtml('🍖 Fome', pet.fullness ?? 100, 100, '#ffd060')}
+              ${barraHtml('😊 Humor', pet.happiness ?? 100, 100, '#00ffb0')}
+            </div>
+          </div>
+        </div>`;
+    }
 
     function renderGrupos(grupos) {
-      const grid  = $('grupos-grid');
-      const vazio = $('grupos-vazio');
-      if (!grupos || grupos.length === 0) {
+      const grid = $('grupos-grid');
+      if (!grid) return;
+      if (!Array.isArray(grupos) || grupos.length === 0) {
+        grid.replaceChildren();
         show('grupos-vazio');
         return;
       }
+
       hide('grupos-vazio');
       grid.innerHTML = grupos.map(g => {
-        const tier = tierLevel(g.level);
+        const jid = typeof g?.jid === 'string' ? g.jid : '';
+        const nome = typeof g?.nome === 'string' && g.nome.trim()
+          ? g.nome.trim()
+          : (jid.split('@')[0] || 'Grupo sem nome');
+        const nivelRaw = Number(g?.level);
+        const nivel = Number.isFinite(nivelRaw) && nivelRaw >= 1 ? Math.floor(nivelRaw) : 1;
+        const tier = tierLevel(nivel);
         return `
           <div class="grupo-card">
-            <div class="grupo-card-nome" title="${g.nome || g.jid}">
-              ${g.nome || g.jid.split('@')[0]}
+            <div class="grupo-card-nome" title="${escapeHtml(nome)}">
+              ${escapeHtml(nome)}
             </div>
             <div class="grupo-card-stats">
               <div class="grupo-stat">
                 <span class="grupo-stat-label">XP</span>
-                <span class="grupo-stat-val neon-roxo">${fmtNum(g.xp)}</span>
+                <span class="grupo-stat-val neon-roxo">${fmtNum(g?.xp)}</span>
               </div>
               <div class="grupo-stat">
                 <span class="grupo-stat-label">Gold</span>
-                <span class="grupo-stat-val neon-gold">${fmtNum(g.gold)}</span>
+                <span class="grupo-stat-val neon-gold">${fmtNum(g?.gold)}</span>
               </div>
               <div class="grupo-stat">
                 <span class="grupo-stat-label">Nível</span>
-                <span class="grupo-stat-val">${g.level} <span style="font-size:0.7rem;opacity:0.7;">${tier.emoji}</span></span>
+                <span class="grupo-stat-val">${nivel} <span style="font-size:0.7rem;opacity:0.7;">${tier.emoji}</span></span>
               </div>
               <div class="grupo-stat">
                 <span class="grupo-stat-label">Msgs</span>
-                <span class="grupo-stat-val">${fmtNum(g.mensagens)}</span>
+                <span class="grupo-stat-val">${fmtNum(g?.mensagens)}</span>
               </div>
             </div>
           </div>`;
@@ -574,7 +590,10 @@
       el.style.boxShadow   = `0 0 0 2px ${cor.border}, 0 0 22px ${cor.glow}`;
       $('perfil-nome').textContent   = u.displayName || u.nome || 'Sem nome';
       $('display-name-input').value = u.displayName || '';
-      $('perfil-numero').textContent = u.telefone ? '+' + u.telefone : '—';
+      const telefone = String(u.telefone ?? '').trim();
+      $('perfil-numero').textContent = telefone
+        ? (telefone.startsWith('+') ? telefone : `+${telefone}`)
+        : '—';
       if (u.bio) {
         $('perfil-bio').textContent = u.bio;
         show('perfil-bio');
@@ -588,22 +607,44 @@
       $('stat-xp').textContent   = fmtNum(u.xp);
       $('stat-gold').textContent = fmtNum(u.gold);
       $('stat-rank').textContent = u.posicaoRanking ? `#${u.posicaoRanking}` : '—';
-      const pct = u.xpProgresso ?? 0;
-      $('xp-atual-txt').textContent = fmtNum(u.xp) + ' XP';
-      $('xp-prox-txt').textContent  = `Próx. nível: ${fmtNum(u.xpParaProximo)} XP`;
+      const nivelAtual = Number.isFinite(Number(u.level)) && Number(u.level) >= 1
+        ? Math.floor(Number(u.level))
+        : 1;
+      const xpTotal = Math.max(0, Number(u.xp) || 0);
+      const calcularXpNivel = nivel => Math.floor(80 * Math.pow(Math.max(0, nivel - 1), 1.4));
+      const inicioRaw = Number(u.xpInicioNivel);
+      const proximoRaw = Number(u.xpParaProximo);
+      const xpInicioNivel = Number.isFinite(inicioRaw) && inicioRaw >= 0
+        ? inicioRaw
+        : calcularXpNivel(nivelAtual);
+      const xpParaProximo = Number.isFinite(proximoRaw) && proximoRaw >= xpInicioNivel
+        ? proximoRaw
+        : calcularXpNivel(nivelAtual + 1);
+      const xpAtualNivel = Math.max(0, xpTotal - xpInicioNivel);
+      const xpNecessarioNivel = Math.max(0, xpParaProximo - xpInicioNivel);
+      const pctCalculado = xpNecessarioNivel > 0
+        ? (xpAtualNivel / xpNecessarioNivel) * 100
+        : 100;
+      // Calcula a barra a partir dos mesmos valores que aparecem no texto.
+      const pct = Math.min(100, Math.max(0, Number.isFinite(pctCalculado) ? Math.floor(pctCalculado) : 0));
+      $('xp-atual-txt').textContent = `${fmtNum(xpAtualNivel)} / ${fmtNum(xpNecessarioNivel)} XP neste nível`;
+      $('xp-prox-txt').textContent  = `Nível ${nivelAtual + 1}: ${fmtNum(xpParaProximo)} XP total`;
       requestAnimationFrame(() => {
         setTimeout(() => { $('barra-xp').style.width = pct + '%'; }, 150);
       });
-      renderChartXP(u.xpHistory || {});
-      renderChartAtividade(u.atividadeSemanal);
+      // Falha em Chart.js não pode interromper o restante do perfil.
+      try { renderChartXP(u.xpHistory || {}); }
+      catch (err) { console.error('Erro ao renderizar gráfico de XP:', err); }
+      try { renderChartAtividade(u.atividadeSemanal); }
+      catch (err) { console.error('Erro ao renderizar atividade semanal:', err); }
       $('act-mensagens').textContent = fmtNum(u.mensagens);
       $('act-quiz').textContent      = fmtNum(u.quizPoints);
       $('act-pet').textContent       = (u.pet?.nome ?? u.pet?.name)
         ? `${u.pet.nome ?? u.pet.name} nv${u.pet.level ?? 1}`
         : 'Nenhum';
       renderGrupos(u.grupos);
-renderRelacionamento(u);
-renderPet(u.pet);
+      renderRelacionamento(u);
+      renderPet(u.pet);
     }
 
     /* ════════════════════════════════════════
@@ -637,19 +678,20 @@ renderPet(u.pet);
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ token: tokenParam }),
           });
-          const data = await res.json();
+          const data = await res.json().catch(() => ({}));
           if (!res.ok) throw new Error(data.error || 'Token inválido ou expirado.');
           jwtSalvo = data.jwt;
           if (!jwtSalvo) throw new Error('Resposta inesperada da API.');
+          // Links mágicos são temporários; não persistir essa sessão no localStorage.
+          localStorage.removeItem('jwt');
           sessionStorage.setItem('piro_jwt', jwtSalvo);
-localStorage.setItem('jwt', jwtSalvo);
         }
 
         // ── Busca dados do usuário
         const meRes  = await fetch(`${API}/user/me`, {
           headers: { 'Authorization': `Bearer ${jwtSalvo}` },
         });
-        const meData = await meRes.json();
+        const meData = await meRes.json().catch(() => ({}));
 
         if (!meRes.ok) {
           if (meRes.status === 401) {
@@ -660,6 +702,10 @@ localStorage.setItem('jwt', jwtSalvo);
             return;
           }
           throw new Error(meData.error || 'Erro ao carregar perfil.');
+        }
+        if (!meData || typeof meData !== 'object' || Array.isArray(meData) ||
+            !Number.isFinite(meData.xp) || !Number.isFinite(meData.level)) {
+          throw new Error('A API retornou dados inválidos para o perfil. Atualize a página e tente novamente.');
         }
 
         // ── Renderiza
@@ -678,30 +724,37 @@ localStorage.setItem('jwt', jwtSalvo);
     }
 
     function sairConta() {
-  localStorage.removeItem('jwt');
-  sessionStorage.removeItem('piro_jwt');
-  window.location.replace('login.html');
-}
+      localStorage.removeItem('jwt');
+      sessionStorage.removeItem('piro_jwt');
+      window.location.replace('login.html');
+    }
 
-async function apagarConta() {
-  const confirmado = confirm('⚠️ Tem certeza? Sua conta será apagada.\nSeus dados de jogo (XP, gold, grupos) serão mantidos.');
-  if (!confirmado) return;
+    async function apagarConta() {
+      const confirmado = confirm('⚠️ Tem certeza? Sua conta será apagada.\nSeus dados de jogo (XP, gold, grupos) serão mantidos.');
+      if (!confirmado) return;
 
-  const jwt = localStorage.getItem('jwt') || sessionStorage.getItem('piro_jwt');
-  try {
-    const res = await fetch(`${API}/auth/conta`, {
-      method: 'DELETE',
-      headers: { 'Authorization': `Bearer ${jwt}` },
-    });
-    if (!res.ok) throw new Error('Erro ao apagar conta.');
-    localStorage.removeItem('jwt');
-    sessionStorage.removeItem('piro_jwt');
-    alert('✅ Conta apagada com sucesso!');
-    window.location.replace('login.html');
-  } catch (err) {
-    alert('Erro ao apagar conta. Tente novamente.');
-  }
-}
+      const jwt = localStorage.getItem('jwt') || sessionStorage.getItem('piro_jwt');
+      if (!jwt) {
+        alert('Sua sessão expirou. Entre novamente.');
+        sairConta();
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API}/auth/conta`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${jwt}` },
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || 'Não foi possível apagar a conta.');
+        localStorage.removeItem('jwt');
+        sessionStorage.removeItem('piro_jwt');
+        alert('✅ Conta apagada com sucesso!');
+        window.location.replace('login.html');
+      } catch (err) {
+        alert(err.message || 'Erro ao apagar conta. Tente novamente.');
+      }
+    }
 
     init();
   </script>
