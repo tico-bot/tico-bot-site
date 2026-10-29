@@ -228,7 +228,7 @@
       .gold-acoes { flex-direction: column; align-items: stretch; }
     }
   </style>
-  <link rel="stylesheet" href="ios-glass.css" />
+  <link rel="stylesheet" href="site-enhancements.css" />
 </head>
 <body>
 
@@ -241,13 +241,13 @@
       <div class="field">
         <label for="admin-key">Chave de Admin</label>
         <div class="field-password-wrap">
-          <input type="password" id="admin-key" placeholder="••••••••••••" autocomplete="current-password" />
+          <input type="password" id="admin-key" placeholder="Chave de administração" autocomplete="off" maxlength="512" />
           <button type="button" class="btn-eye" id="btn-toggle-senha" title="Mostrar/ocultar senha" aria-label="Mostrar ou ocultar senha">👁</button>
         </div>
       </div>
       <p id="login-erro" class="login-erro hidden">Chave inválida. Tente novamente.</p>
       <button id="btn-login" class="btn-primary">Entrar</button>
-      <p class="login-hint">A sessão fica salva apenas neste navegador (sessionStorage) e some ao fechar a aba.</p>
+      <p class="login-hint">A sessão expira após 1 hora e fica limitada a esta aba.</p>
     </div>
   </div>
 
@@ -728,7 +728,7 @@
         <div id="contas-lock" style="display:flex;flex-direction:column;gap:.75rem;max-width:360px;">
           <p style="font-size:.85rem;color:var(--muted);">Digite a chave admin para visualizar os dados das contas.</p>
           <div class="field-password-wrap">
-            <input type="password" id="contas-senha-input" placeholder="Chave admin" autocomplete="off" />
+            <input type="password" id="contas-senha-input" maxlength="512" placeholder="Chave admin" autocomplete="off" />
             <button type="button" class="btn-eye" id="btn-contas-eye">👁</button>
           </div>
           <button class="btn-primary" id="btn-contas-unlock" style="width:auto;">Desbloquear</button>
@@ -806,8 +806,36 @@
       }[c]));
     }
 
-    function adminKey()     { return sessionStorage.getItem('piro_admin_key'); }
-    function adminHeaders() { return { 'x-admin-key': adminKey(), 'Content-Type': 'application/json' }; }
+    function adminToken() { return sessionStorage.getItem('piro_admin_token'); }
+    function adminHeaders() {
+      const token = adminToken();
+      return token
+        ? { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }
+        : { 'Content-Type': 'application/json' };
+    }
+    let adminSessionTimer = null;
+    let contasExpiryTimer = null;
+
+    function agendarExpiracaoAdmin(segundos) {
+      clearTimeout(adminSessionTimer);
+      adminSessionTimer = setTimeout(() => encerrarSessaoAdmin(true), Math.max(1, segundos) * 1000);
+    }
+
+    function encerrarSessaoAdmin(expirada = false) {
+      clearTimeout(adminSessionTimer);
+      sessionStorage.removeItem('piro_admin_token');
+      sessionStorage.removeItem('piro_admin_key');
+      bloquearContas();
+      if (typeof autosyncTimer !== 'undefined' && autosyncTimer) clearInterval(autosyncTimer);
+      if (typeof logsLiveTimer !== 'undefined' && logsLiveTimer) clearInterval(logsLiveTimer);
+      hide('painel');
+      show('tela-login');
+      $('admin-key').value = '';
+      if (expirada) {
+        $('login-erro').textContent = 'Sua sessão administrativa expirou. Entre novamente.';
+        show('login-erro');
+      }
+    }
 
     let toastTimer;
     function toast(msg, tipo = 'ok') {
@@ -856,19 +884,35 @@
     });
 
     $('btn-login').addEventListener('click', async () => {
-      const chave = $('admin-key').value.trim();
-      if (!chave) return;
+      const chave = $('admin-key').value;
+      if (!chave || chave.length > 512) return;
       $('btn-login').disabled = true;
       $('btn-login').textContent = 'Verificando...';
       hide('login-erro');
       try {
-        const res = await fetch(`${API}/admin/verify`, { headers: { 'x-admin-key': chave } });
-        if (!res.ok) throw new Error();
-        sessionStorage.setItem('piro_admin_key', chave);
+        const res = await fetch(`${API}/admin/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ key: chave }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || typeof data.token !== 'string' || !data.token) {
+          $('login-erro').textContent = res.status === 429
+            ? 'Muitas tentativas de login. Aguarde 15 minutos.'
+            : (data.error || 'Chave inválida. Tente novamente.');
+          show('login-erro');
+          return;
+        }
+        sessionStorage.setItem('piro_admin_token', data.token);
+        sessionStorage.removeItem('piro_admin_key');
+        sessionStorage.removeItem('piro_contas_token');
+        agendarExpiracaoAdmin(Number(data.expiresIn) || 3600);
+        $('admin-key').value = '';
         hide('tela-login');
         show('painel');
         iniciarPainel();
       } catch {
+        $('login-erro').textContent = 'Não foi possível conectar ao servidor.';
         show('login-erro');
       } finally {
         $('btn-login').disabled = false;
@@ -879,14 +923,7 @@
     $('admin-key').addEventListener('keydown', e => { if (e.key === 'Enter') $('btn-login').click(); });
 
     /* ===== LOGOUT ===== */
-    $('btn-logout').addEventListener('click', () => {
-      sessionStorage.removeItem('piro_admin_key');
-      if (autosyncTimer) clearInterval(autosyncTimer);
-      if (logsLiveTimer) clearInterval(logsLiveTimer);
-      hide('painel');
-      show('tela-login');
-      $('admin-key').value = '';
-    });
+    $('btn-logout').addEventListener('click', () => encerrarSessaoAdmin(false));
 
     /* ===== SIDEBAR ===== */
     $('btn-abrir-sidebar').addEventListener('click', () => {
@@ -1070,8 +1107,10 @@ const titulosAbas  = {
         const nomeReal   = nomeExibicao(g);
         const nomeEsc    = escapeHtml(nomeReal);
         const jidEsc     = escapeHtml(g.idGrupo);
-        const membrosTxt = g.membros != null ? `${g.membros} membro${g.membros === 1 ? '' : 's'}` : '';
-        const xpTxt      = g.xpTotal != null ? `${formatNum(g.xpTotal)} XP total` : '';
+        const membrosNum = Number(g.membros);
+        const membrosTxt = Number.isFinite(membrosNum) && membrosNum >= 0
+          ? `${Math.floor(membrosNum)} membro${Math.floor(membrosNum) === 1 ? '' : 's'}` : '';
+        const xpTxt = g.xpTotal != null ? `${formatNum(g.xpTotal)} XP total` : '';
 
         return `
         <div class="grupo-card" data-jid="${jidEsc}">
@@ -1564,8 +1603,10 @@ const titulosAbas  = {
         const banido   = u.banido
           ? '<span class="badge-ban">Banido</span>'
           : '<span class="badge-ok">Ativo</span>';
-        const warns    = u.warns    ?? 0;
-        const maxWarns = u.maxWarns ?? 3;
+        const warnsRaw = Number(u.warns);
+        const maxRaw = Number(u.maxWarns);
+        const warns = Number.isFinite(warnsRaw) ? Math.max(0, Math.floor(warnsRaw)) : 0;
+        const maxWarns = Number.isFinite(maxRaw) ? Math.min(1000, Math.max(1, Math.floor(maxRaw))) : 3;
         const idEsc    = escapeHtml(u.idWhatsApp);
         const nomeEsc  = escapeHtml(u.nome || u.idWhatsApp || '—');
         const numEsc   = escapeHtml(u.telefone || u.idWhatsApp?.split('@')[0] || '—');
@@ -1599,7 +1640,7 @@ const titulosAbas  = {
                 ${grupos.map(([jid, qtd]) => `
                   <div class="warn-grupo-linha">
                     <span class="wg-nome">${escapeHtml(nomeGrupoPorJid(jid))}</span>
-                    <span class="wg-qtd">${qtd}</span>
+                    <span class="wg-qtd">${formatNum(qtd)}</span>
                     <button class="btn-remover-1" data-action="remover-warn"
                       data-id="${idEsc}" data-nome="${nomeEsc}"
                       data-grupo="${escapeHtml(jid)}">−1</button>
@@ -1793,17 +1834,20 @@ const titulosAbas  = {
         selectEl.innerHTML  = '<option value="">Nenhum grupo</option>';
         selectOr.innerHTML  = '<option value="">Nenhum grupo</option>';
       } else {
-        listaEl.innerHTML = grupos.map(g => `
+        listaEl.innerHTML = grupos.map(g => {
+          const levelRaw = Number(g.level);
+          const level = Number.isFinite(levelRaw) ? Math.max(1, Math.floor(levelRaw)) : 1;
+          return `
           <div class="usr-grupo-item">
             <span class="usr-grupo-nome">${escapeHtml(g.nomeGrupo || g.idGrupo)}</span>
             <div class="usr-grupo-tags">
               <span class="usr-tag gold">🪙 ${formatNum(g.gold || 0)}</span>
               <span class="usr-tag xp">⚡ ${formatNum(g.xp || 0)} XP</span>
-              <span class="usr-tag lv">Lv ${g.level || 1}</span>
+              <span class="usr-tag lv">Lv ${level}</span>
               ${g.empregoAtual ? `<span class="usr-tag">${escapeHtml(g.empregoAtual)}</span>` : ''}
             </div>
-          </div>
-        `).join('');
+          </div>`;
+        }).join('');
 
         const optGrupos = grupos.map(g =>
           `<option value="${escapeHtml(g.idGrupo)}">${escapeHtml(g.nomeGrupo || g.idGrupo)}</option>`
@@ -2158,11 +2202,12 @@ $('btn-calc-xp-level').addEventListener('click', () => {
       }
       listaEl.innerHTML = inv.map(item => {
         const nomeItem = item.nome || item.item || item.id || '?';
-        const qtd      = item.quantidade ?? item.qty ?? 1;
+        const qtdRaw   = Number(item.quantidade ?? item.qty ?? 1);
+        const qtd      = Number.isFinite(qtdRaw) ? Math.max(0, Math.floor(qtdRaw)) : 1;
         return `
         <div class="inv-item">
           <span class="inv-item-nome">${escapeHtml(nomeItem)}</span>
-          <span class="inv-item-qtd">x${qtd}</span>
+          <span class="inv-item-qtd">x${formatNum(qtd)}</span>
           <button class="btn-inv-rem" data-action="inv-remover"
             data-item="${escapeHtml(nomeItem)}"
             data-jid="${escapeHtml(jid)}">✕ Remover</button>
@@ -2342,7 +2387,9 @@ $('btn-calc-xp-level').addEventListener('click', () => {
 
       const lista = $('logs-lista');
       lista.innerHTML = logs.map(l => {
-        const tipoClass = `tipo-${l.tipo || 'info'}`;
+        const tipoRaw = String(l.tipo || 'info').toLowerCase();
+        const tipo = ['erro', 'cmd', 'warn', 'info'].includes(tipoRaw) ? tipoRaw : 'info';
+        const tipoClass = `tipo-${tipo}`;
         const hora      = l.timestamp
           ? new Date(l.timestamp).toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit', second:'2-digit' })
           : '—';
@@ -2353,7 +2400,7 @@ $('btn-calc-xp-level').addEventListener('click', () => {
             <span class="log-cmd">${escapeHtml(l.comando || l.mensagem || '—')}</span>
             ${l.detalhe ? `<span class="log-detalhe">${escapeHtml(l.detalhe)}</span>` : ''}
             <div class="log-meta">
-              ${l.tipo    ? `<span class="log-badge ${l.tipo}">${l.tipo.toUpperCase()}</span>` : ''}
+              ${l.tipo    ? `<span class="log-badge ${tipo}">${tipo.toUpperCase()}</span>` : ''}
               ${l.usuario ? `<span class="log-badge">👤 ${escapeHtml(l.usuario)}</span>` : ''}
               ${l.grupo   ? `<span class="log-badge">👥 ${escapeHtml(nomeGrupoPorJid(l.grupo) || l.grupo)}</span>` : ''}
             </div>
@@ -2423,24 +2470,61 @@ $('btn-calc-xp-level').addEventListener('click', () => {
     let contasCache = [];
     let contasDesbloqueadas = false;
 
+    function contasToken() { return sessionStorage.getItem('piro_contas_token'); }
+
+    function bloquearContas() {
+      clearTimeout(contasExpiryTimer);
+      sessionStorage.removeItem('piro_contas_token');
+      contasDesbloqueadas = false;
+      contasCache = [];
+      const painel = document.getElementById('contas-painel');
+      const lock = document.getElementById('contas-lock');
+      if (painel) painel.classList.add('hidden');
+      if (lock) lock.style.display = '';
+      const tbody = document.getElementById('contas-tbody');
+      if (tbody) tbody.textContent = '';
+      const busca = document.getElementById('contas-busca');
+      if (busca) busca.value = '';
+      const erro = document.getElementById('contas-lock-erro');
+      if (erro) { erro.textContent = 'Chave inválida ou sessão expirada.'; erro.classList.add('hidden'); }
+    }
+
     document.getElementById('btn-contas-eye')?.addEventListener('click', () => {
       const inp = document.getElementById('contas-senha-input');
       inp.type = inp.type === 'password' ? 'text' : 'password';
     });
 
     document.getElementById('btn-contas-unlock')?.addEventListener('click', async () => {
-      const senha  = document.getElementById('contas-senha-input').value.trim();
+      const senha  = document.getElementById('contas-senha-input').value;
       const erroEl = document.getElementById('contas-lock-erro');
-      if (!senha) return;
+      if (!senha || senha.length > 512) return;
+      const botao = document.getElementById('btn-contas-unlock');
+      botao.disabled = true;
       try {
-        const res = await fetch(`${API}/admin/verify-contas`, { headers: { 'x-admin-key': senha } });
-        if (!res.ok) { erroEl.classList.remove('hidden'); return; }
-        erroEl.classList.add('hidden');
+        const res = await fetch(`${API}/admin/verify-contas`, {
+          headers: { ...adminHeaders(), 'x-contas-key': senha },
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || typeof data.token !== 'string' || !data.token) {
+          erroEl.textContent = data.error || 'Chave inválida ou autorização indisponível.';
+          erroEl.classList.remove('hidden');
+          return;
+        }
+        bloquearContas();
+        sessionStorage.setItem('piro_contas_token', data.token);
         contasDesbloqueadas = true;
-        document.getElementById('contas-lock').style.display  = 'none';
+        contasExpiryTimer = setTimeout(bloquearContas, Math.max(1, Number(data.expiresIn) || 900) * 1000);
+        erroEl.classList.add('hidden');
+        document.getElementById('contas-senha-input').value = '';
+        document.getElementById('contas-lock').style.display = 'none';
         document.getElementById('contas-painel').classList.remove('hidden');
         carregarContas();
-      } catch { erroEl.classList.remove('hidden'); }
+      } catch {
+        erroEl.textContent = 'Não foi possível conectar ao servidor.';
+        erroEl.classList.remove('hidden');
+      } finally {
+        botao.disabled = false;
+      }
     });
 
     document.getElementById('contas-senha-input')?.addEventListener('keydown', e => {
@@ -2453,9 +2537,13 @@ $('btn-calc-xp-level').addEventListener('click', () => {
       hide('contas-tabela-wrap');
       hide('contas-vazio');
       try {
-        const res  = await fetch(`${API}/admin/contas`, { headers: adminHeaders() });
-        const data = await res.json();
-        contasCache = data.contas || [];
+        const res  = await fetch(`${API}/admin/contas`, { headers: { ...adminHeaders(), 'x-contas-token': contasToken() } });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          if (res.status === 401 || res.status === 403) bloquearContas();
+          throw new Error(data.error || 'Não foi possível carregar as contas.');
+        }
+        contasCache = Array.isArray(data.contas) ? data.contas : [];
         document.getElementById('contas-contagem').textContent = contasCache.length;
         renderContas(contasCache);
       } catch {
@@ -2490,6 +2578,12 @@ $('btn-calc-xp-level').addEventListener('click', () => {
 
     document.getElementById('btn-refresh-contas')?.addEventListener('click', carregarContas);
 
+    function valorCsvSeguro(valor) {
+      let texto = String(valor ?? '');
+      if (/^[=+@\-\t\r]/.test(texto)) texto = `'${texto}`;
+      return `"${texto.replace(/"/g, '""')}"`;
+    }
+
     document.getElementById('btn-contas-csv')?.addEventListener('click', () => {
       if (!contasCache.length) return;
       const header = 'Nome,Usuário,Telefone,Email,Cadastrado em';
@@ -2498,7 +2592,7 @@ $('btn-calc-xp-level').addEventListener('click', () => {
         c.telefone ? '+' + c.telefone : '',
         c.email || '',
         c.createdAt ? new Date(c.createdAt).toLocaleDateString('pt-BR') : ''
-      ].map(v => `"${v}"`).join(','));
+      ].map(valorCsvSeguro).join(','));
       const csv  = [header, ...rows].join('\n');
       const blob = new Blob([csv], { type: 'text/csv' });
       const url  = URL.createObjectURL(blob);
@@ -2506,11 +2600,29 @@ $('btn-calc-xp-level').addEventListener('click', () => {
       URL.revokeObjectURL(url);
     });
 
-    if (adminKey()) {
-      hide('tela-login');
-      show('painel');
-      iniciarPainel();
+    async function restaurarSessaoAdmin() {
+      // Remove any legacy master key left by older versions of this page.
+      sessionStorage.removeItem('piro_admin_key');
+      const token = adminToken();
+      if (!token) return;
+      try {
+        const res = await fetch(`${API}/admin/verify`, { headers: adminHeaders() });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.ok) throw new Error('Sessão expirada.');
+        const restante = Math.floor((Number(data.expiresAt) - Date.now()) / 1000);
+        if (!Number.isFinite(restante) || restante <= 0) throw new Error('Sessão expirada.');
+        agendarExpiracaoAdmin(restante);
+        hide('tela-login');
+        show('painel');
+        iniciarPainel();
+      } catch {
+        sessionStorage.removeItem('piro_admin_token');
+        bloquearContas();
+        show('tela-login');
+        hide('painel');
+      }
     }
+    restaurarSessaoAdmin();
   </script>
 </body>
 </html>

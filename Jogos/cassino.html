@@ -10,7 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../index.css" />
   <link rel="stylesheet" href="cassino.css" />
-  <link rel="stylesheet" href="../ios-glass.css" />
+  <link rel="stylesheet" href="../site-enhancements.css" />
   <link rel="stylesheet" href="jogos-theme.css" />
 </head>
 
@@ -195,7 +195,16 @@
       </div>
     </div>
 
-    <!-- Tabela de prêmios -->
+    <!-- Tabela de prêmios: fechada por padrão e controlada pelo botão abaixo. -->
+    <button
+      type="button"
+      class="game-table-toggle"
+      id="btn-toggle-paytable"
+      aria-controls="paytable"
+      aria-expanded="false"
+    >
+      🏆 Mostrar tabela de prêmios ▼
+    </button>
     <div class="paytable-card" id="paytable" style="display:none">
       <div class="paytable-title">Tabela de Prêmios</div>
       <div id="paytable-rows"></div>
@@ -254,7 +263,15 @@ function escapeHtml(value) {
 }
 
 function getJwt() {
-  return localStorage.getItem('jwt') || sessionStorage.getItem('piro_jwt') || null;
+  const atual = sessionStorage.getItem('piro_jwt');
+  if (atual) return atual;
+  const legado = localStorage.getItem('jwt');
+  if (legado) {
+    sessionStorage.setItem('piro_jwt', legado);
+    localStorage.removeItem('jwt');
+    return legado;
+  }
+  return null;
 }
 
 function prepararRequestId(jogo, payload) {
@@ -354,6 +371,18 @@ const RARIDADE = {
   '🍋': { tres: { label: 'comum',   cls: 'rarity-comum'   }, dois: { label: 'comum',  cls: 'rarity-comum'  } },
   '🍒': { tres: { label: 'comum',   cls: 'rarity-comum'   }, dois: { label: 'comum',  cls: 'rarity-comum'  } },
 };
+
+function setPaytableVisibility(visible) {
+  const paytable = $('paytable');
+  const toggle = $('btn-toggle-paytable');
+  if (!paytable || !toggle) return;
+
+  paytable.style.display = visible ? 'block' : 'none';
+  toggle.setAttribute('aria-expanded', String(visible));
+  toggle.textContent = visible
+    ? 'Ocultar tabela de prêmios ▲'
+    : '🏆 Mostrar tabela de prêmios ▼';
+}
 
 function buildPaytable() {
   const wrap = $('paytable-rows');
@@ -494,7 +523,6 @@ function onGrupoChange() {
 
   const saldoChip  = $('saldo-chip');
   const slotMachine = $('slot-machine');
-  const paytable   = $('paytable');
   const histCard   = $('history-card');
   const btnSpin    = $('btn-spin');
 
@@ -506,7 +534,6 @@ function onGrupoChange() {
 
     saldoChip.style.display   = 'flex';
     slotMachine.style.display = 'block';
-    paytable.style.display    = 'block';
     histCard.style.display    = 'block';
     $('saldo-val').textContent = fmtNum(saldoAtual) + ' gold';
     sessionHistory = [];
@@ -517,7 +544,7 @@ function onGrupoChange() {
   } else {
     saldoChip.style.display   = 'none';
     slotMachine.style.display = 'none';
-    paytable.style.display    = 'none';
+    setPaytableVisibility(false);
     histCard.style.display    = 'none';
     btnSpin.disabled = true;
   }
@@ -907,6 +934,11 @@ function dispararConfete() {
 ══════════════════════════════════════════════════════ */
 $('grupo-select')?.addEventListener('change', onGrupoChange);
 
+$('btn-toggle-paytable')?.addEventListener('click', () => {
+  const paytable = $('paytable');
+  setPaytableVisibility(paytable?.style.display === 'none');
+});
+
 $('btn-spin')?.addEventListener('click', girar);
 
 /* Quick bets */
@@ -951,6 +983,7 @@ $('aposta-input')?.addEventListener('keydown', e => {
       const data = await res.json();
       if (res.ok && data.jwt) {
         sessionStorage.setItem('piro_jwt', data.jwt);
+        localStorage.removeItem('jwt');
         history.replaceState(null, '', 'cassino.html');
       }
     } catch { /* token inválido — checkAuth vai rejeitar abaixo */ }

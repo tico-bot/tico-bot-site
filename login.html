@@ -6,7 +6,7 @@
   <link rel="icon" href="favicon.ico" type="image/x-icon" />
   <title>Login — Tico Bot</title>
   <link rel="stylesheet" href="login.css" />
-  <link rel="stylesheet" href="ios-glass.css" />
+  <link rel="stylesheet" href="site-enhancements.css" />
 </head>
 <body>
   <div class="auth-wrapper">
@@ -28,7 +28,7 @@
           <label for="password">Senha</label>
           <div class="password-wrap">
             <input id="password" type="password" placeholder="••••••"
-              autocomplete="current-password" required />
+              autocomplete="current-password" maxlength="128" required />
             <button type="button" class="toggle-pw" aria-label="Mostrar senha">👁️</button>
           </div>
         </div>
@@ -53,9 +53,12 @@
       ? 'http://localhost:3000/api'
       : 'https://tico-bot-6jpn.onrender.com/api';
 
-    if (localStorage.getItem('jwt')) {
-      window.location.replace('perfil.html');
+    const legacyJwt = localStorage.getItem('jwt');
+    if (legacyJwt && !sessionStorage.getItem('piro_jwt')) {
+      sessionStorage.setItem('piro_jwt', legacyJwt);
     }
+    localStorage.removeItem('jwt');
+    if (sessionStorage.getItem('piro_jwt')) window.location.replace('perfil.html');
 
     const form     = document.getElementById('loginForm');
     const btnLogin = document.getElementById('btnLogin');
@@ -156,8 +159,8 @@
           return;
         }
 
-        localStorage.setItem('jwt', data.jwt);
         sessionStorage.setItem('piro_jwt', data.jwt);
+        localStorage.removeItem('jwt');
         window.location.replace('perfil.html');
       } catch {
         showError('Não foi possível conectar ao servidor. Tente novamente em instantes.');

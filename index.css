@@ -510,6 +510,9 @@ main {
   font-size: 11px;
   color: var(--text-dim);
 }
+
+.podium-phone { font-family: var(--font-mono); font-size: 10px; color: var(--text-dim); max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+.podium-bio { font-size: 10px; color: var(--text-secondary); line-height: 1.3; max-width: 100%; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
 .podium-bar {
   width: 100%;
   border-radius: 8px 8px 0 0;
@@ -624,6 +627,8 @@ main {
   font-family: var(--font-mono);
   font-size: 11px; color: var(--text-dim);
 }
+
+.rank-bio { margin-top: 3px; color: var(--text-secondary); font-size: 11px; line-height: 1.35; overflow-wrap: anywhere; }
 .rank-bar-wrap {
   height: 3px;
   background: var(--bg-elevated);
@@ -747,6 +752,8 @@ main {
   margin-top: 4px;
   letter-spacing: 0.04em;
 }
+
+.modal-bio { color: var(--text-secondary); font-size: 0.84rem; line-height: 1.45; margin-top: 8px; white-space: pre-wrap; overflow-wrap: anywhere; }
 .modal-name {
   font-family: var(--font-display);
   font-size: 1.2rem; font-weight: 700;

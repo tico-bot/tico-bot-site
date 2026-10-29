@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="index.css" />
-  <link rel="stylesheet" href="ios-glass.css" />
+  <link rel="stylesheet" href="site-enhancements.css" />
 </head>
 <body>
 
@@ -202,6 +202,7 @@
   <div class="modal-name" id="modal-name">—</div>
   <div class="modal-rank-badge" id="modal-rank-badge">— 🏆</div>
   <div class="modal-telefone" id="modal-telefone"></div>
+  <p class="modal-bio" id="modal-bio"></p>
 </div>
     </div>
 
@@ -226,10 +227,6 @@
     <span class="modal-stat-label">Ranking</span>
     <span class="modal-stat-val mint" id="modal-pos">—</span>
   </div>
-  <div class="modal-stat">
-    <span class="modal-stat-label">Grupos</span>
-    <span class="modal-stat-val" id="modal-grupos-count">—</span>
-  </div>
 </div>
     <div class="modal-xp-label">
       <span id="modal-xp-pct">XP para o próximo nível</span>
@@ -239,20 +236,8 @@
       <div class="modal-xp-bar-inner" id="modal-xp-bar" style="width:0%"></div>
     </div>
 
-    <div class="modal-grupos" id="modal-grupos" style="display:none">
-      <div class="modal-grupos-title">Grupos</div>
-      <div class="modal-grupos-list" id="modal-grupos-list"></div>
-    </div>
 
     <div class="modal-actions">
-      <a href="perfil.html" class="modal-btn modal-btn-primary" id="modal-perfil-link">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-        Ver Perfil
-      </a>
-      <button class="modal-btn modal-btn-secondary" id="modal-copy-btn" title="Copiar número de telefone">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-        Copiar telefone
-      </button>
       <button class="modal-btn modal-btn-secondary" id="modal-close-btn">Fechar</button>
     </div>
   </div>
@@ -268,6 +253,11 @@
     ? 'http://localhost:3000/api'
     : 'https://tico-bot-6jpn.onrender.com/api';
 
+  // Tokens de conta ficam no armazenamento da aba, não no localStorage persistente.
+  const jwtAntigo = localStorage.getItem('jwt');
+  if (jwtAntigo && !sessionStorage.getItem('piro_jwt')) sessionStorage.setItem('piro_jwt', jwtAntigo);
+  localStorage.removeItem('jwt');
+
   (function checkTokenAutoLogin() {
     const params = new URLSearchParams(window.location.search);
     const token = params.get('token');
@@ -280,8 +270,8 @@
         .then(res => res.json())
         .then(data => {
           if (data.jwt) {
-            localStorage.setItem('jwt', data.jwt);
             sessionStorage.setItem('piro_jwt', data.jwt);
+            localStorage.removeItem('jwt');
             const cleanUrl = window.location.origin + window.location.pathname;
             window.history.replaceState({}, document.title, cleanUrl);
             window.location.reload();
@@ -434,6 +424,18 @@
     if ($('modal-avatar'))      $('modal-avatar').textContent = initials(nome);
     if ($('modal-name'))        $('modal-name').textContent   = nome;
     if ($('modal-rank-badge'))  $('modal-rank-badge').textContent = `#${pos} no ranking`;
+    const telefoneEl = $('modal-telefone');
+    const telefone = String(user.telefone || '').replace(/\D/g, '');
+    if (telefoneEl) {
+      telefoneEl.textContent = telefone
+        ? `📱 +${telefone}`
+        : user.telefoneOculto ? '📱 Telefone ocultado pelo usuário' : '📱 Telefone indisponível';
+    }
+    const bioEl = $('modal-bio');
+    if (bioEl) {
+      bioEl.textContent = String(user.bio || '').trim();
+      bioEl.style.display = bioEl.textContent ? 'block' : 'none';
+    }
 
     const prog = computeLevelProgress(user.xp);
 
@@ -442,19 +444,6 @@
     if ($('modal-msgs'))  $('modal-msgs').textContent  = fmtNum(user.mensagens ?? 0);
     if ($('modal-gold'))  $('modal-gold').textContent  = fmtNum(user.gold ?? 0);
     if ($('modal-pos'))   $('modal-pos').textContent   = `#${pos}`;
-
-    const idRaw = user.idWhatsApp || '';
-    const telEl = $('modal-telefone');
-    if (telEl) {
-      if (idRaw.endsWith('@lid')) {
-        telEl.textContent = 'Carregando...';
-      } else {
-        const telefoneExibir = idRaw.replace('@s.whatsapp.net', '').replace(/\D/g, '');
-        telEl.textContent = telefoneExibir ? `+${telefoneExibir}` : '';
-      }
-    }
-
-    if ($('modal-grupos-count')) $('modal-grupos-count').textContent = '…';
 
     if ($('modal-xp-pct'))  $('modal-xp-pct').textContent  = `${prog.pct}% para nível ${prog.level + 1}`;
     if ($('modal-xp-next')) $('modal-xp-next').textContent = `${fmtXP(prog.xpParaProximo)} XP`;
@@ -468,49 +457,7 @@
     modalOverlay?.classList.add('open');
     document.body.style.overflow = 'hidden';
 
-    const gruposEl    = $('modal-grupos');
-    const gruposListEl = $('modal-grupos-list');
-    if (gruposEl && gruposListEl && user.idWhatsApp) {
-      gruposEl.style.display = 'none';
-      gruposListEl.innerHTML = '';
-      const jwt = sessionStorage.getItem('piro_jwt') || localStorage.getItem('jwt');
 
-      // Resolve telefone de @lid independente do JWT
-      if (telEl && idRaw.endsWith('@lid')) {
-        telEl.textContent = 'Carregando...';
-        fetch(`${API}/user/telefone/${encodeURIComponent(idRaw)}`)
-          .then(r => r.json())
-          .then(d => { if (d.telefone) telEl.textContent = `+${d.telefone}`; })
-          .catch(() => { telEl.textContent = ''; });
-      }
-
-      if (!jwt) {
-        if ($('modal-grupos-count')) $('modal-grupos-count').textContent = '—';
-        return;
-      }
-      fetch(`${API}/user/grupos/${encodeURIComponent(user.idWhatsApp)}`, {
-        headers: { 'Authorization': `Bearer ${jwt}` }
-      })
-        .then(r => r.json())
-        .then(data => {
-          if (!data.grupos?.length) {
-            if ($('modal-grupos-count')) $('modal-grupos-count').textContent = '0';
-            return;
-          }
-          gruposEl.style.display = 'block';
-          if ($('modal-grupos-count')) $('modal-grupos-count').textContent = data.grupos.length;
-
-          gruposListEl.innerHTML = data.grupos.map(g => `
-            <div class="modal-grupo-item">
-              <span class="modal-grupo-nome">${escapeHtml(g.nome)}</span>
-              <span class="modal-grupo-gold">${fmtNum(g.gold)} 💰</span>
-            </div>
-          `).join('');
-        })
-        .catch(() => {
-          if ($('modal-grupos-count')) $('modal-grupos-count').textContent = '—';
-        });
-    }
   }
 
   function closeModal() {
@@ -522,39 +469,6 @@
   $('modal-close-btn')?.addEventListener('click', closeModal);
   modalOverlay?.addEventListener('click', e => { if (e.target === modalOverlay) closeModal(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && modalOverlay?.classList.contains('open')) closeModal(); });
-
-  $('modal-copy-btn')?.addEventListener('click', async () => {
-    if (!currentModalUser) return;
-    const idRaw = currentModalUser.idWhatsApp || '';
-    let telefone = ($('modal-telefone')?.textContent || '').trim();
-
-    if (!telefone || telefone === 'Carregando...') {
-      if (idRaw.endsWith('@lid')) {
-        try {
-          const resposta = await fetch(`${API}/user/telefone/${encodeURIComponent(idRaw)}`);
-          const dados = await resposta.json();
-          telefone = dados.telefone ? `+${String(dados.telefone).replace(/\\D/g, '')}` : '';
-        } catch {
-          telefone = '';
-        }
-      } else {
-        const numero = idRaw.replace('@s.whatsapp.net', '').replace(/\\D/g, '');
-        telefone = numero ? `+${numero}` : '';
-      }
-    }
-
-    if (!telefone || telefone === 'Carregando...') {
-      showToast('Número de telefone indisponível.');
-      return;
-    }
-
-    try {
-      await navigator.clipboard.writeText(telefone);
-      showToast('Telefone copiado: ' + telefone);
-    } catch {
-      showToast('Não foi possível copiar o telefone.');
-    }
-  });
 
   /* ══════════════════════════════════
      PÓDIO
@@ -574,6 +488,8 @@
           <span class="podium-medal">${medals[i]}</span>
         </div>
         <div class="podium-name">${escapeHtml(u.nome || 'Anônimo')}</div>
+        ${u.telefone ? `<div class="podium-phone">+${escapeHtml(String(u.telefone).replace(/\D/g, ''))}</div>` : ''}
+        ${u.bio ? `<div class="podium-bio">${escapeHtml(u.bio)}</div>` : ''}
         <div class="podium-xp">${fmtMetric(u, metricField)}</div>
         <div class="podium-bar">${i + 1}º</div>
       </div>
@@ -623,7 +539,8 @@
           <div class="rank-avatar">${initials(nome)}</div>
           <div class="rank-info">
             <div class="rank-name">${escapeHtml(nome)}</div>
-            <div class="rank-sub">${fmtNum(u.mensagens)} msgs</div>
+            <div class="rank-sub">${u.telefone ? `+${escapeHtml(String(u.telefone).replace(/\D/g, ''))} · ` : ''}${fmtNum(u.mensagens)} msgs</div>
+            ${u.bio ? `<div class="rank-bio">${escapeHtml(u.bio)}</div>` : ''}
             <div class="rank-bar-wrap">
               <div class="rank-bar" style="width:${pct}%"></div>
             </div>
@@ -676,7 +593,8 @@
           <div class="rank-avatar">${initials(nome)}</div>
           <div class="rank-info">
             <div class="rank-name">${highlightMatch(nome, rawQuery)}</div>
-            <div class="rank-sub">${fmtNum(u.mensagens)} msgs</div>
+            <div class="rank-sub">${u.telefone ? `+${escapeHtml(String(u.telefone).replace(/\D/g, ''))} · ` : ''}${fmtNum(u.mensagens)} msgs</div>
+            ${u.bio ? `<div class="rank-bio">${escapeHtml(u.bio)}</div>` : ''}
             <div class="rank-bar-wrap">
               <div class="rank-bar" style="width:${pct}%"></div>
             </div>

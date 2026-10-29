@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="index.css" />
   <link rel="stylesheet" href="perfil.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-  <link rel="stylesheet" href="ios-glass.css" />
+  <link rel="stylesheet" href="site-enhancements.css" />
 </head>
 <body>
 
@@ -106,6 +106,17 @@
           </div>
           <p class="perfil-numero" id="perfil-numero">—</p>
           <p class="perfil-bio hidden" id="perfil-bio"></p>
+          <div class="privacy-phone-setting" id="privacy-phone-setting">
+            <label class="privacy-phone-label" for="mostrar-telefone-publico">
+              <input id="mostrar-telefone-publico" type="checkbox" checked />
+              Exibir meu telefone no ranking e perfil público
+            </label>
+            <p class="privacy-phone-help">Quando desmarcado, seu número deixa de aparecer publicamente. Seu perfil continua mostrando o número para você.</p>
+            <div class="privacy-phone-actions">
+              <button id="save-privacy-phone" type="button" class="btn-acao">Salvar privacidade</button>
+              <span id="privacy-phone-msg" role="status" aria-live="polite"></span>
+            </div>
+          </div>
         </div>
         <div class="perfil-acoes">
           <button onclick="sairConta()" class="btn-acao btn-sair">
@@ -561,7 +572,7 @@
       const input = document.getElementById('display-name-input');
       const msg = document.getElementById('display-name-msg');
       const displayName = input.value.trim();
-      const token = localStorage.getItem('jwt') || sessionStorage.getItem('piro_jwt');
+      const token = sessionStorage.getItem('piro_jwt') || localStorage.getItem('jwt');
 
       if (!displayName || displayName.length > 40 || /[\r\n\u0000-\u001f\u007f]/.test(displayName)) {
         msg.textContent = 'Use de 1 a 40 caracteres em uma única linha.';
@@ -601,6 +612,37 @@
       }
     });
 
+    document.getElementById('save-privacy-phone').addEventListener('click', async () => {
+      const checkbox = document.getElementById('mostrar-telefone-publico');
+      const button = document.getElementById('save-privacy-phone');
+      const message = document.getElementById('privacy-phone-msg');
+      const token = sessionStorage.getItem('piro_jwt') || localStorage.getItem('jwt');
+      if (!token) {
+        message.textContent = 'Sua sessão expirou. Entre novamente.';
+        return;
+      }
+
+      button.disabled = true;
+      message.textContent = 'Salvando…';
+      try {
+        const response = await fetch(`${API}/user/privacy`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ mostrarTelefonePublico: checkbox.checked }),
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.error || 'Não foi possível salvar a preferência.');
+        checkbox.checked = data.mostrarTelefonePublico !== false;
+        message.textContent = checkbox.checked
+          ? 'Seu telefone aparecerá no ranking público.'
+          : 'Seu telefone ficará oculto no ranking público.';
+      } catch (error) {
+        message.textContent = error.message || 'Erro ao salvar a preferência.';
+      } finally {
+        button.disabled = false;
+      }
+    });
+
     function preencherPerfil(u) {
       const nomePerfil = u.displayName || u.nome;
       const ini = iniciais(nomePerfil);
@@ -612,6 +654,8 @@
       el.style.boxShadow   = `0 0 0 2px ${cor.border}, 0 0 22px ${cor.glow}`;
       $('perfil-nome').textContent   = nomePerfil || 'Sem nome';
       $('display-name-input').value = u.displayName || '';
+      $('mostrar-telefone-publico').checked = u.mostrarTelefonePublico !== false;
+      $('privacy-phone-msg').textContent = '';
       const telefone = String(u.telefone ?? '').trim();
       $('perfil-numero').textContent = telefone
         ? (telefone.startsWith('+') ? telefone : `+${telefone}`)
@@ -676,8 +720,13 @@
       const params     = new URLSearchParams(window.location.search);
       const tokenParam = params.get('token');
 
-      // Prioridade: JWT do login por senha (localStorage) > token via link (sessionStorage)
-      let jwtSalvo = localStorage.getItem('jwt') || sessionStorage.getItem('piro_jwt');
+      // Migra tokens antigos para armazenamento limitado à aba e remove a cópia persistente.
+      const jwtAntigo = localStorage.getItem('jwt');
+      let jwtSalvo = sessionStorage.getItem('piro_jwt') || jwtAntigo;
+      if (jwtAntigo) {
+        if (!sessionStorage.getItem('piro_jwt')) sessionStorage.setItem('piro_jwt', jwtAntigo);
+        localStorage.removeItem('jwt');
+      }
 
       // Sem nenhuma autenticação → redireciona pro login
       if (!tokenParam && !jwtSalvo) {
@@ -755,7 +804,7 @@
       const confirmado = confirm('⚠️ Tem certeza? Sua conta será apagada.\nSeus dados de jogo (XP, gold, grupos) serão mantidos.');
       if (!confirmado) return;
 
-      const jwt = localStorage.getItem('jwt') || sessionStorage.getItem('piro_jwt');
+      const jwt = sessionStorage.getItem('piro_jwt') || localStorage.getItem('jwt');
       if (!jwt) {
         alert('Sua sessão expirou. Entre novamente.');
         sairConta();

@@ -21,7 +21,7 @@
       color: #2de2ff;
     }
   </style>
-  <link rel="stylesheet" href="ios-glass.css" />
+  <link rel="stylesheet" href="site-enhancements.css" />
 </head>
 <body>
   <div class="auth-wrapper">
@@ -33,7 +33,7 @@
       </div>
 
       <div class="help-banner">
-        💡 <strong>Como obter seu código:</strong> Digite <strong>!recuperar</strong> em qualquer grupo no WhatsApp onde o bot está presente. O código de 6 dígitos será enviado <strong>no próprio grupo</strong>!
+        💡 <strong>Como obter seu código:</strong> Digite <strong>!recuperar</strong> em um grupo do WhatsApp onde o bot está presente. O código de 6 dígitos será enviado <strong>somente na sua conversa privada com o Tico Bot</strong>.
       </div>
 
       <form id="recuperarForm" novalidate>
@@ -47,15 +47,15 @@
         <div class="field-group">
           <label for="codigo">Código de 6 dígitos</label>
           <input id="codigo" type="text" placeholder="123456"
-            maxlength="6" autocomplete="one-time-code" required />
-          <span class="field-hint">Código recebido no grupo ao digitar !recuperar</span>
+            inputmode="numeric" pattern="[0-9]{6}" minlength="6" maxlength="6" autocomplete="one-time-code" required />
+          <span class="field-hint">Código enviado pelo Tico Bot na conversa privada do WhatsApp</span>
         </div>
 
         <div class="field-group">
           <label for="novaSenha">Nova Senha</label>
           <div class="password-wrap">
-            <input id="novaSenha" type="password" placeholder="Mínimo 6 caracteres"
-              autocomplete="new-password" required />
+            <input id="novaSenha" type="password" placeholder="Mínimo 10 caracteres (máx. 72 bytes)"
+              autocomplete="new-password" minlength="10" maxlength="72" required />
             <button type="button" class="toggle-pw" aria-label="Mostrar senha" tabindex="-1">👁️</button>
           </div>
         </div>
@@ -115,8 +115,17 @@
         return;
       }
 
-      if (novaSenha.length < 6) {
-        showMsg('A nova senha deve ter pelo menos 6 caracteres.');
+      if (!/^\d{6}$/.test(codigo)) {
+        showMsg('Informe o código de 6 dígitos recebido na conversa privada do Tico Bot.');
+        return;
+      }
+
+      if (novaSenha.length < 10 || novaSenha.length > 128) {
+        showMsg('A nova senha deve ter pelo menos 10 caracteres.');
+        return;
+      }
+      if (new TextEncoder().encode(novaSenha).length > 72) {
+        showMsg('A nova senha deve ter no máximo 72 bytes em UTF-8. Evite palavras muito longas ou emojis.');
         return;
       }
 

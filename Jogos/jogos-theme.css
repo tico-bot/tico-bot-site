@@ -69,6 +69,35 @@ body :where(.slot-result-title, .corrida-result-title).jackpot {
   color: #fff !important;
 }
 
+/* Botões para mostrar e ocultar tabelas informativas dos jogos. */
+.game-table-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  gap: 8px;
+  margin: 0 0 12px;
+  padding: 12px 16px;
+  color: var(--text-primary);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--game-radius, 24px);
+  font-family: var(--font-body, inherit);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: border-color .15s, background .15s, transform .15s;
+}
+.game-table-toggle:hover {
+  border-color: var(--gold, #fff);
+  background: var(--bg-elevated, #202020);
+}
+.game-table-toggle:active { transform: scale(.99); }
+.game-table-toggle:focus-visible {
+  outline: 2px solid var(--gold, #fff);
+  outline-offset: 2px;
+}
+
 /* Acabamento Liquid Glass específico dos jogos, preservando a paleta preto/branco. */
 :root { --game-radius: 24px; }
 body :where(.login-gate,.group-selector-card,.slot-machine,.slot-machine-card,

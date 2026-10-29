@@ -6,7 +6,7 @@
   <link rel="icon" href="favicon.ico" type="image/x-icon" />
   <title>Criar Conta — Tico Bot</title>
   <link rel="stylesheet" href="login.css" />
-  <link rel="stylesheet" href="ios-glass.css" />
+  <link rel="stylesheet" href="site-enhancements.css" />
 </head>
 <body>
   <div class="auth-wrapper">
@@ -23,13 +23,21 @@
           <input id="idWhatsApp" type="tel" placeholder="5565999999999"
             autocomplete="tel" maxlength="15" required />
           <span class="field-hint">DDI + DDD + número, só dígitos. Ex: 5565912345678</span>
+          <button type="button" class="btn-secondary" id="btnEnviarCodigo">Enviar código para WhatsApp</button>
+        </div>
+
+        <div class="field-group">
+          <label for="codigo">Código de verificação</label>
+          <input id="codigo" type="text" placeholder="Código de 6 dígitos"
+            autocomplete="one-time-code" inputmode="numeric" pattern="[0-9]{6}" minlength="6" maxlength="6" required />
+          <span class="field-hint">O código é enviado em uma conversa privada com o bot e expira em 10 minutos.</span>
         </div>
 
         <div class="field-group">
           <label for="email">Email</label>
           <input id="email" type="email" placeholder="seu@email.com"
-            autocomplete="email" required />
-          <span class="field-hint">Usado para recuperação de conta.</span>
+            autocomplete="email" maxlength="254" required />
+          <span class="field-hint">Também serve para entrar na conta; a recuperação exige o WhatsApp cadastrado.</span>
         </div>
 
         <div class="field-group">
@@ -42,8 +50,8 @@
         <div class="field-group">
           <label for="password">Senha</label>
           <div class="password-wrap">
-            <input id="password" type="password" placeholder="Mínimo 6 caracteres"
-              autocomplete="new-password" required />
+            <input id="password" type="password" placeholder="Mínimo 10 caracteres (máx. 72 bytes)"
+              autocomplete="new-password" minlength="10" maxlength="72" required />
             <button type="button" class="toggle-pw" aria-label="Mostrar senha" tabindex="-1">👁️</button>
           </div>
         </div>
@@ -52,7 +60,7 @@
           <label for="passwordConfirm">Confirmar senha</label>
           <div class="password-wrap">
             <input id="passwordConfirm" type="password" placeholder="Repita a senha"
-              autocomplete="new-password" required />
+              autocomplete="new-password" minlength="10" maxlength="72" required />
             <button type="button" class="toggle-pw2" aria-label="Mostrar senha" tabindex="-1">👁️</button>
           </div>
         </div>
@@ -76,11 +84,13 @@
       ? 'http://localhost:3000/api'
       : 'https://tico-bot-6jpn.onrender.com/api';
 
-    if (localStorage.getItem('jwt')) {
-      window.location.replace('perfil.html');
-    }
+    const legacyJwt = localStorage.getItem('jwt');
+    if (legacyJwt && !sessionStorage.getItem('piro_jwt')) sessionStorage.setItem('piro_jwt', legacyJwt);
+    localStorage.removeItem('jwt');
+    if (sessionStorage.getItem('piro_jwt')) window.location.replace('perfil.html');
 
     const form   = document.getElementById('cadastroForm');
+    const btnEnviarCodigo = document.getElementById('btnEnviarCodigo');
     const btn    = document.getElementById('btnCadastrar');
     const msgBox = document.getElementById('cadastroMsg');
 
@@ -110,7 +120,7 @@
 
     function msgPorStatus(status, serverMsg) {
       if (status === 400) {
-        const seguros = ['entre 3 e 30', 'letras, números', 'mínimo 6', 'já está em uso', 'Perfil não encontrado'];
+        const seguros = ['entre 3 e 30', 'letras, números', 'entre 10 e 128', '72 bytes', 'mínimo 10', 'já está em uso', 'Perfil não encontrado'];
         if (serverMsg && seguros.some(s => serverMsg.includes(s))) return serverMsg;
         return 'Dados inválidos. Verifique os campos e tente novamente.';
       }
@@ -120,19 +130,46 @@
       return 'Erro ao criar conta.';
     }
 
-    // Fetch com retry automático e aviso de "servidor acordando"
-    async function fetchComRetry(url, opts, tentativas = 2) {
-      for (let i = 0; i < tentativas; i++) {
-        try {
-          if (i === 1) showMsg('⏳ Servidor acordando, aguarde...', 'info');
-          const res = await fetch(url, opts);
-          return res;
-        } catch (e) {
-          if (i === tentativas - 1) throw e;
-          await new Promise(r => setTimeout(r, 4000));
+    async function enviarCodigo() {
+      const rawTel = document.getElementById('idWhatsApp').value;
+      const numero = rawTel.replace(/\D/g, '');
+      if (!numero || numero.length < 8 || numero.length > 15) {
+        showMsg('Número inválido. Informe DDI + DDD + número, somente dígitos.');
+        return;
+      }
+
+      btnEnviarCodigo.disabled = true;
+      btnEnviarCodigo.textContent = 'Enviando…';
+      try {
+        const res = await fetch(`${API}/auth/otp/enviar`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ idWhatsApp: `${numero}@s.whatsapp.net` }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.status === 429) {
+          showMsg('Muitas solicitações. Aguarde alguns minutos antes de tentar novamente.');
+          return;
         }
+        if (res.status >= 500) {
+          showMsg('Serviço de mensagens indisponível. Tente novamente mais tarde.');
+          return;
+        }
+        if (!res.ok) {
+          showMsg(data.error || 'Confira o número informado e tente novamente.');
+          return;
+        }
+        showMsg(data.message || 'Se o número estiver associado a um perfil elegível, você receberá um código no WhatsApp privado.', 'info');
+        document.getElementById('codigo').focus();
+      } catch {
+        showMsg('Não foi possível conectar ao servidor. Confira sua conexão e tente novamente.');
+      } finally {
+        btnEnviarCodigo.disabled = false;
+        btnEnviarCodigo.textContent = 'Enviar código para WhatsApp';
       }
     }
+
+    btnEnviarCodigo.addEventListener('click', enviarCodigo);
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -143,6 +180,7 @@
       const username        = document.getElementById('username').value.trim();
       const password        = document.getElementById('password').value;
       const passwordConfirm = document.getElementById('passwordConfirm').value;
+      const codigo = document.getElementById('codigo').value.trim();
 
       if (!idWhatsAppNum || idWhatsAppNum.length < 10 || idWhatsAppNum.length > 15) {
         showMsg('Número inválido. Use DDI + DDD + número (só dígitos).');
@@ -160,8 +198,16 @@
         showMsg('Usuário só pode ter letras, números e _.');
         return;
       }
-      if (password.length < 6) {
-        showMsg('Senha muito curta (mínimo 6 caracteres).');
+      if (password.length < 10) {
+        showMsg('Senha muito curta (mínimo 10 caracteres).');
+        return;
+      }
+      if (new TextEncoder().encode(password).length > 72) {
+        showMsg('A senha deve ter no máximo 72 bytes em UTF-8. Evite palavras muito longas ou emojis.');
+        return;
+      }
+      if (!/^\d{6}$/.test(codigo)) {
+        showMsg('Informe o código de verificação de 6 dígitos recebido no WhatsApp privado.');
         return;
       }
       if (password !== passwordConfirm) {
@@ -171,7 +217,7 @@
 
       setLoading(true);
       try {
-        const res = await fetchComRetry(`${API}/auth/cadastrar`, {
+        const res = await fetch(`${API}/auth/cadastrar`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -179,6 +225,7 @@
             email,
             username,
             password,
+            codigo,
           }),
         });
 

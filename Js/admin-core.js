@@ -24,8 +24,8 @@ const API = window.location.hostname === 'localhost' || window.location.hostname
       .then(res => res.json())
       .then(data => {
         if (data.jwt) {
-          localStorage.setItem('jwt', data.jwt);
           sessionStorage.setItem('piro_jwt', data.jwt);
+          localStorage.removeItem('jwt');
           const cleanUrl = window.location.origin + window.location.pathname;
           window.history.replaceState({}, document.title, cleanUrl);
           if (window.location.pathname.includes('login.html') || window.location.pathname.includes('cadastro.html')) {
@@ -50,8 +50,11 @@ function escapeHtml(str) {
   }[c]));
 }
 
-function adminKey()     { return sessionStorage.getItem('piro_admin_key'); }
-function adminHeaders() { return { 'x-admin-key': adminKey(), 'Content-Type': 'application/json' }; }
+function adminToken() { return sessionStorage.getItem('piro_admin_token'); }
+function adminHeaders() {
+  const token = adminToken();
+  return token ? { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } : { 'Content-Type': 'application/json' };
+}
 
 function horaAgora() {
   return new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
@@ -184,19 +187,28 @@ $('btn-toggle-senha').addEventListener('click', () => {
 });
 
 $('btn-login').addEventListener('click', async () => {
-  const chave = $('admin-key').value.trim();
-  if (!chave) return;
+  const chave = $('admin-key').value;
+  if (!chave || chave.length > 512) return;
   $('btn-login').disabled = true;
   $('btn-login').textContent = 'Verificando...';
   hide('login-erro');
   try {
-    const res = await fetch(`${API}/admin/verify`, { headers: { 'x-admin-key': chave } });
-    if (!res.ok) throw new Error();
-    sessionStorage.setItem('piro_admin_key', chave);
+    const res = await fetch(`${API}/admin/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key: chave }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || typeof data.token !== 'string') throw new Error();
+    sessionStorage.setItem('piro_admin_token', data.token);
+    sessionStorage.removeItem('piro_admin_key');
+    sessionStorage.removeItem('piro_contas_token');
+    $('admin-key').value = '';
     hide('tela-login');
     show('painel');
     iniciarPainel();
   } catch {
+    $('login-erro').textContent = 'Chave inválida ou serviço indisponível.';
     show('login-erro');
   } finally {
     $('btn-login').disabled = false;
@@ -209,6 +221,8 @@ $('admin-key').addEventListener('keydown', e => { if (e.key === 'Enter') $('btn-
 /* ── Logout ──────────────────────────────────────────────── */
 $('btn-logout').addEventListener('click', () => {
   sessionStorage.removeItem('piro_admin_key');
+  sessionStorage.removeItem('piro_admin_token');
+  sessionStorage.removeItem('piro_contas_token');
   if (window.autosyncTimer) clearInterval(window.autosyncTimer);
   if (window.logsLiveTimer) clearInterval(window.logsLiveTimer);
   hide('painel');
@@ -330,15 +344,26 @@ function iniciarPainel() {
   if ($('chk-autosync').checked) aplicarAutosync(true);
 }
 
-if (adminKey()) {
-  hide('tela-login');
-  show('painel');
-  iniciarPainel();
+async function restaurarSessaoAdmin() {
+  sessionStorage.removeItem('piro_admin_key');
+  if (!adminToken()) return;
+  try {
+    const response = await fetch(`${API}/admin/verify`, { headers: adminHeaders() });
+    if (!response.ok) throw new Error('Sessão expirada.');
+    hide('tela-login');
+    show('painel');
+    iniciarPainel();
+  } catch {
+    sessionStorage.removeItem('piro_admin_token');
+    hide('painel');
+    show('tela-login');
+  }
 }
+restaurarSessaoAdmin();
 
 /* ── Exports para outros módulos ─────────────────────────── */
 window.adminCore = {
-  API, $, show, hide, escapeHtml, adminKey, adminHeaders,
+  API, $, show, hide, escapeHtml, adminToken, adminHeaders,
   horaAgora, formatNum, toast, abrirModal, abrirModalRenomear,
   nomeExibicao, nomeGrupoPorJid, salvarNomeCustomLocal, nomesCustomLocais,
   atualizarDashboard

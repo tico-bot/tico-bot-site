@@ -10,7 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../index.css" />
   <link rel="stylesheet" href="corrida.css" />
-  <link rel="stylesheet" href="../ios-glass.css" />
+  <link rel="stylesheet" href="../site-enhancements.css" />
   <link rel="stylesheet" href="jogos-theme.css" />
 </head>
 
@@ -192,7 +192,16 @@
       </div>
     </div>
 
-    <!-- Tabela de odds -->
+    <!-- Tabela de odds: fechada por padrão. -->
+    <button
+      type="button"
+      class="game-table-toggle"
+      id="btn-toggle-odds"
+      aria-controls="odds-card"
+      aria-expanded="false"
+    >
+      📊 Mostrar tabela de odds ▼
+    </button>
     <div class="odds-card" id="odds-card" style="display:none">
       <div class="odds-title">Tabela de Odds</div>
       <div id="odds-rows"></div>
@@ -263,7 +272,15 @@ function escapeHtml(value) {
 }
 
 function getJwt() {
-  return localStorage.getItem('jwt') || sessionStorage.getItem('piro_jwt') || null;
+  const atual = sessionStorage.getItem('piro_jwt');
+  if (atual) return atual;
+  const legado = localStorage.getItem('jwt');
+  if (legado) {
+    sessionStorage.setItem('piro_jwt', legado);
+    localStorage.removeItem('jwt');
+    return legado;
+  }
+  return null;
 }
 
 function prepararRequestId(jogo, payload) {
@@ -496,6 +513,18 @@ function selecionarBicho(idx) {
 /* ══════════════════════════════════════════════════════
    TABELA DE ODDS
 ══════════════════════════════════════════════════════ */
+function setOddsVisibility(visible) {
+  const oddsCard = $('odds-card');
+  const toggle = $('btn-toggle-odds');
+  if (!oddsCard || !toggle) return;
+
+  oddsCard.style.display = visible ? 'block' : 'none';
+  toggle.setAttribute('aria-expanded', String(visible));
+  toggle.textContent = visible
+    ? 'Ocultar tabela de odds ▲'
+    : '📊 Mostrar tabela de odds ▼';
+}
+
 function buildOddsTable() {
   const wrap = $('odds-rows');
   if (!wrap) return;
@@ -838,7 +867,7 @@ function onGrupoChange() {
 
   $('saldo-chip').style.display     = show ? 'flex' : 'none';
   $('corrida-card').style.display   = show ? 'block' : 'none';
-  $('odds-card').style.display      = show ? 'block' : 'none';
+  if (!show) setOddsVisibility(false);
   $('history-card').style.display   = show ? 'block' : 'none';
 
   if (show) {
@@ -873,6 +902,10 @@ function onGrupoChange() {
    EVENTOS
 ══════════════════════════════════════════════════════ */
 $('grupo-select')?.addEventListener('change', onGrupoChange);
+$('btn-toggle-odds')?.addEventListener('click', () => {
+  const oddsCard = $('odds-card');
+  setOddsVisibility(oddsCard?.style.display === 'none');
+});
 $('btn-correr')?.addEventListener('click', apostar);
 $('aposta-input')?.addEventListener('keydown', e => { if (e.key === 'Enter') apostar(); });
 $('aposta-input')?.addEventListener('input', () => {
@@ -936,6 +969,7 @@ document.querySelectorAll('.quick-bet').forEach(btn => {
       const data = await res.json();
       if (res.ok && data.jwt) {
         sessionStorage.setItem('piro_jwt', data.jwt);
+        localStorage.removeItem('jwt');
         history.replaceState(null, '', 'corrida.html');
       }
     } catch {}

@@ -40,6 +40,68 @@ test('os scripts inline de Cassino e Corrida têm sintaxe válida', () => {
   }
 });
 
+test('a tabela de prêmios começa escondida e o botão alterna sua visibilidade', () => {
+  const html = readPage('cassino');
+  assert.match(html, /<button[\s\S]*?id="btn-toggle-paytable"[\s\S]*?aria-expanded="false"[\s\S]*?>[\s\S]*?Mostrar tabela de prêmios[\s\S]*?<\/button>/);
+  assert.match(html, /<div class="paytable-card" id="paytable" style="display:none">/);
+  const script = inlineScript(html);
+  const fn = extractFunction(script, 'setPaytableVisibility');
+  const paytable = { style: { display: 'none' } };
+  const button = { textContent: '🏆 Mostrar tabela de prêmios ▼', attributes: {}, setAttribute(name, value) { this.attributes[name] = value; } };
+  const getElement = id => id === 'paytable' ? paytable : id === 'btn-toggle-paytable' ? button : null;
+  const setVisibility = new Function('$', `${fn}; return setPaytableVisibility;`)(getElement);
+
+  setVisibility(true);
+  assert.equal(paytable.style.display, 'block');
+  assert.equal(button.attributes['aria-expanded'], 'true');
+  assert.equal(button.textContent, 'Ocultar tabela de prêmios ▲');
+
+  setVisibility(false);
+  assert.equal(paytable.style.display, 'none');
+  assert.equal(button.attributes['aria-expanded'], 'false');
+  assert.equal(button.textContent, '🏆 Mostrar tabela de prêmios ▼');
+});
+
+test('a tabela de odds da Corrida começa escondida e pode ser alternada pelo botão', () => {
+  const html = readPage('corrida');
+  assert.match(html, /<button[\s\S]*?id="btn-toggle-odds"[\s\S]*?aria-expanded="false"[\s\S]*?>[\s\S]*?Mostrar tabela de odds[\s\S]*?<\/button>/);
+  assert.match(html, /<div class="odds-card" id="odds-card" style="display:none">/);
+  const script = inlineScript(html);
+  const fn = extractFunction(script, 'setOddsVisibility');
+  const oddsCard = { style: { display: 'none' } };
+  const button = { textContent: '📊 Mostrar tabela de odds ▼', attributes: {}, setAttribute(name, value) { this.attributes[name] = value; } };
+  const getElement = id => id === 'odds-card' ? oddsCard : id === 'btn-toggle-odds' ? button : null;
+  const setVisibility = new Function('$', `${fn}; return setOddsVisibility;`)(getElement);
+
+  setVisibility(true);
+  assert.equal(oddsCard.style.display, 'block');
+  assert.equal(button.attributes['aria-expanded'], 'true');
+  assert.equal(button.textContent, 'Ocultar tabela de odds ▲');
+
+  setVisibility(false);
+  assert.equal(oddsCard.style.display, 'none');
+  assert.equal(button.attributes['aria-expanded'], 'false');
+  assert.equal(button.textContent, '📊 Mostrar tabela de odds ▼');
+  assert.doesNotMatch(script, /\$\('odds-card'\)\.style\.display\s*=\s*show\s*\?\s*'block'\s*:\s*'none'/);
+});
+
+test('a folha de estilos global tem nome neutro e todas as referências continuam válidas', () => {
+  assert.ok(fs.existsSync(path.join(ROOT, 'site-enhancements.css')));
+  assert.equal(fs.existsSync(path.join(ROOT, 'ios-glass.css')), false);
+  const walk = dir => fs.readdirSync(dir, { withFileTypes: true }).flatMap(entry => {
+    if (entry.name === '.git' || entry.name === 'node_modules') return [];
+    const full = path.join(dir, entry.name);
+    return entry.isDirectory() ? walk(full) : entry.name.endsWith('.html') ? [full] : [];
+  });
+  for (const file of walk(ROOT)) {
+    const html = fs.readFileSync(file, 'utf8');
+    assert.doesNotMatch(html, /ios-glass\.css/i, `${path.relative(ROOT, file)} should not reference the old filename`);
+    for (const match of html.matchAll(/<link\b[^>]*href="([^"]*site-enhancements\.css)"[^>]*>/gi)) {
+      assert.ok(fs.existsSync(path.resolve(path.dirname(file), match[1])), `stylesheet path in ${path.relative(ROOT, file)} should exist`);
+    }
+  }
+});
+
 test('os dois jogos aceitam apenas apostas inteiras positivas no parser do navegador', () => {
   for (const name of Object.keys(pages)) {
     const script = inlineScript(readPage(name));
