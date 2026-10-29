@@ -138,7 +138,7 @@
             <span class="stat-val neon-roxo" id="stat-xp">—</span>
           </div>
           <div class="stat-pill">
-            <span class="stat-label">Gold</span>
+            <span class="stat-label">Prata</span>
             <span class="stat-val neon-gold" id="stat-gold">—</span>
           </div>
           <div class="stat-pill">
@@ -563,7 +563,7 @@
                 <span class="grupo-stat-val neon-roxo">${fmtNum(g?.xp)}</span>
               </div>
               <div class="grupo-stat">
-                <span class="grupo-stat-label">Gold</span>
+                <span class="grupo-stat-label">Prata</span>
                 <span class="grupo-stat-val neon-gold">${fmtNum(g?.gold)}</span>
               </div>
               <div class="grupo-stat">
@@ -820,7 +820,7 @@
     }
 
     async function apagarConta() {
-      const confirmado = confirm('⚠️ Tem certeza? Sua conta será apagada.\nSeus dados de jogo (XP, gold, grupos) serão mantidos.');
+      const confirmado = confirm('⚠️ Tem certeza? Sua conta será apagada.\nSeus dados de jogo (XP, Prata e grupos) serão mantidos.');
       if (!confirmado) return;
 
       const jwt = sessionStorage.getItem('piro_jwt') || localStorage.getItem('jwt');

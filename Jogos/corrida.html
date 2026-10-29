@@ -92,7 +92,7 @@
       </div>
       <div class="saldo-chip" id="saldo-chip" style="display:none">
         <span>💰 Saldo disponível</span>
-        <strong id="saldo-val">— gold</strong>
+        <strong id="saldo-val">— Prata</strong>
       </div>
     </div>
 
@@ -183,11 +183,11 @@
         </div>
         <div class="session-stat pos">
           <span>Ganhos</span>
-          <strong id="stat-ganhos-val">0 gold</strong>
+          <strong id="stat-ganhos-val">0 Prata</strong>
         </div>
         <div class="session-stat neg">
           <span>Perdas</span>
-          <strong id="stat-perdas-val">0 gold</strong>
+          <strong id="stat-perdas-val">0 Prata</strong>
         </div>
       </div>
     </div>
@@ -342,10 +342,10 @@ async function liberarRodadaAposErro(jogo, requestId) {
       opt.text = `${nomeGrupo} — ${fmtNum(saldoAtual)} 💰`;
     }
     const saldoEl = $('saldo-val');
-    if (saldoEl) saldoEl.textContent = fmtNum(saldoAtual) + ' gold';
+    if (saldoEl) saldoEl.textContent = fmtNum(saldoAtual) + ' Prata';
 
     const liberar = window.confirm(
-      `A rodada anterior retornou erro. Atualizei o saldo do grupo para ${fmtNum(saldoAtual)} gold. Confira o saldo e o histórico antes de continuar. Deseja liberar uma nova aposta?`
+      `A rodada anterior retornou erro. Atualizei o saldo do grupo para ${fmtNum(saldoAtual)} Prata. Confira o saldo e o histórico antes de continuar. Deseja liberar uma nova aposta?`
     );
     if (liberar) {
       limparRequestId(jogo, requestId);
@@ -564,10 +564,10 @@ function mostrarResultado(data) {
     ? `🎉 Vitória! ${vencedor.emoji} ${vencedor.nome.replace(/^\S+\s/, '')} venceu! (${escolha.odds}x)`
     : `❌ Derrota! ${vencedor.emoji} ${vencedor.nome.replace(/^\S+\s/, '')} venceu.`;
 
-  $('result-aposta').textContent = fmtNum(aposta) + ' gold';
+  $('result-aposta').textContent = fmtNum(aposta) + ' Prata';
   $('result-odds').textContent   = escolha.odds + 'x';
-  $('result-premio').textContent = premio > 0 ? '+' + fmtNum(premio) + ' gold' : '—';
-  $('result-saldo').textContent  = fmtNum(saldoFinal) + ' gold';
+  $('result-premio').textContent = premio > 0 ? '+' + fmtNum(premio) + ' Prata' : '—';
+  $('result-saldo').textContent  = fmtNum(saldoFinal) + ' Prata';
 
   const premioWrap = $('result-premio-wrap');
   premioWrap.className = 'corrida-result-item ' + (premio > 0 ? 'mint-val' : 'red-val');
@@ -578,12 +578,12 @@ function mostrarResultado(data) {
 
   const statusEl = $('corrida-status');
   statusEl.textContent = ganhou
-    ? `${sinal}${fmtNum(lucroLiq)} gold 🎉`
-    : `-${fmtNum(aposta)} gold 😢`;
+    ? `${sinal}${fmtNum(lucroLiq)} Prata 🎉`
+    : `-${fmtNum(aposta)} Prata 😢`;
   statusEl.className = 'corrida-status ' + (ganhou ? 'win' : 'lose');
 
   saldoAtual = saldoFinal;
-  $('saldo-val').textContent = fmtNum(saldoFinal) + ' gold';
+  $('saldo-val').textContent = fmtNum(saldoFinal) + ' Prata';
 
   const sel = $('grupo-select');
   if (sel.selectedIndex >= 0) {
@@ -618,7 +618,7 @@ function addHistory(data) {
     <div class="history-item">
       <span class="history-symbols">Aposta: ${h.escolha} · Venceu: ${h.vencedor}</span>
       <span class="history-val ${h.lucroLiq >= 0 ? 'pos' : 'neg'}">
-        ${h.lucroLiq >= 0 ? '+' : ''}${fmtNum(h.lucroLiq)} gold
+        ${h.lucroLiq >= 0 ? '+' : ''}${fmtNum(h.lucroLiq)} Prata
       </span>
     </div>
   `).join('');
@@ -634,8 +634,8 @@ function atualizarSessao(lucroLiq, aposta) {
 
   $('session-stats').style.display = 'grid';
   $('stat-corridas-val').textContent = sessaoCorridas;
-  $('stat-ganhos-val').textContent   = fmtNum(sessaoGanhos) + ' gold';
-  $('stat-perdas-val').textContent   = fmtNum(sessaoPerdas) + ' gold';
+  $('stat-ganhos-val').textContent   = fmtNum(sessaoGanhos) + ' Prata';
+  $('stat-perdas-val').textContent   = fmtNum(sessaoPerdas) + ' Prata';
 
   ultimaAposta = aposta;
   const btnRepeat = $('btn-repeat');
@@ -708,9 +708,9 @@ async function apostar() {
   const inp  = $('aposta-input');
 
   if (escolha === null) { showToast('Escolha um bicho antes de apostar!'); return; }
-  if (aposta < 10)      { hint.textContent = 'Mínimo: 10 gold'; inp.classList.add('err'); return; }
+  if (aposta < 10)      { hint.textContent = 'Mínimo: 10 Prata'; inp.classList.add('err'); return; }
   if (aposta > saldoAtual) { hint.textContent = 'Saldo insuficiente'; inp.classList.add('err'); return; }
-  if (aposta > 100_000) { hint.textContent = 'Máximo: 100.000 gold'; inp.classList.add('err'); return; }
+  if (aposta > 100_000) { hint.textContent = 'Máximo: 100.000 Prata'; inp.classList.add('err'); return; }
   hint.textContent = ''; inp.classList.remove('err');
 
   const payloadAposta = { idGrupo: grupoAtual, escolha, aposta };
@@ -807,8 +807,8 @@ async function apostar() {
 
   showToast(
     apiData.ganhou
-      ? `+${fmtNum(apiData.lucroLiq)} gold! 🎉`
-      : `-${fmtNum(apiData.aposta)} gold 😢`,
+      ? `+${fmtNum(apiData.lucroLiq)} Prata! 🎉`
+      : `-${fmtNum(apiData.aposta)} Prata 😢`,
     apiData.ganhou ? 'win' : 'lose'
   );
 }
@@ -877,7 +877,7 @@ function onGrupoChange() {
     const btnRepeat = $('btn-repeat');
     if (btnRepeat) btnRepeat.style.display = 'none';
 
-    $('saldo-val').textContent = fmtNum(saldoAtual) + ' gold';
+    $('saldo-val').textContent = fmtNum(saldoAtual) + ' Prata';
     $('btn-correr').disabled   = true;
     $('corrida-status').textContent = 'Escolha um bicho e aposte para começar!';
     $('corrida-status').className   = 'corrida-status';

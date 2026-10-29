@@ -75,7 +75,7 @@
     .btn-copiar-jid { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 0.7rem; padding: 0; margin-left: 0.45rem; text-decoration: underline; }
     .btn-copiar-jid:hover { color: var(--roxo); }
 
-    /* grupo expandido — ranking gold + ações */
+    /* grupo expandido — ranking de Prata + ações */
     .grupo-card { cursor: default; }
     .grupo-card-body { width: 100%; }
     .btn-ver-gold { background: var(--amar-dim); border: 1px solid rgba(255,208,96,.3); color: var(--amarelo); border-radius: var(--radius-sm); padding: 0.35rem 0.7rem; font-size: 0.76rem; font-weight: 600; cursor: pointer; white-space: nowrap; transition: opacity .2s; margin-top: 0.4rem; }
@@ -360,7 +360,7 @@
 
         <p class="secao-hint">
           Use o ícone <span class="hint-icon">✎</span> para renomear um grupo. Clique em
-          <strong>🪙 Ver Gold</strong> em cada grupo para ver o ranking e ajustar saldos.
+          <strong>🪙 Ver Prata</strong> em cada grupo para ver o ranking e ajustar saldos.
         </p>
 
         <div class="grupos-toolbar">
@@ -498,7 +498,7 @@
               </div>
               <div class="usr-stat">
                 <span class="usr-stat-val gold" id="usr-gold-global">0</span>
-                <span class="usr-stat-label">Gold Total</span>
+                <span class="usr-stat-label">Saldo total em Prata</span>
               </div>
               <div class="usr-stat">
                 <span class="usr-stat-val"      id="usr-msgs-global">0</span>
@@ -514,8 +514,8 @@
 
             <!-- Ações -->
 <div>
-  <!-- ── Gold ── -->
-  <div class="usr-acoes-titulo">Ajustar Gold</div>
+  <!-- ── Prata ── -->
+  <div class="usr-acoes-titulo">Ajustar Prata</div>
   <div class="usr-acoes-grid">
     <div class="usr-acao-row">
       <div class="field">
@@ -533,7 +533,7 @@
 
     <!-- Transferência -->
     <div class="usr-acao-row">
-      <div class="usr-acao-title">🔄 Transferir gold para outro usuário</div>
+      <div class="usr-acao-title">🔄 Transferir Prata para outro usuário</div>
       <div class="usr-transferencia" style="width:100%;">
         <div class="transfer-row">
           <div class="field">
@@ -656,7 +656,7 @@
           <div class="dash-grid" style="margin-bottom:1.75rem;">
             <div class="dash-card warn">
               <span class="dash-card-valor" id="eco-total-gold">0</span>
-              <span class="dash-card-label">Gold em circulação</span>
+              <span class="dash-card-label">Prata em circulação</span>
             </div>
             <div class="dash-card mint">
               <span class="dash-card-valor" id="eco-total-xp">0</span>
@@ -664,15 +664,15 @@
             </div>
             <div class="dash-card accent">
               <span class="dash-card-valor" id="eco-media-gold">0</span>
-              <span class="dash-card-label">Média gold/usuário</span>
+              <span class="dash-card-label">Média de Prata por usuário</span>
             </div>
             <div class="dash-card">
               <span class="dash-card-valor" id="eco-total-usuarios">0</span>
-              <span class="dash-card-label">Usuários com gold</span>
+              <span class="dash-card-label">Usuários com saldo em Prata</span>
             </div>
           </div>
 
-          <div class="dash-sub-titulo">🪙 Top 10 — Maior Gold Global</div>
+          <div class="dash-sub-titulo">🪙 Top 10 — Maior saldo global em Prata</div>
           <div id="eco-rank-gold" style="display:flex;flex-direction:column;gap:.4rem;margin-bottom:1.75rem;"></div>
 
           <div class="dash-sub-titulo">⚡ Top 10 — Maior XP Global</div>
@@ -1123,7 +1123,7 @@ const titulosAbas  = {
                 </div>
                 <span class="grupo-jid">${jidEsc}<button class="btn-copiar-jid" data-jid="${jidEsc}">copiar</button></span>
                 ${(membrosTxt || xpTxt) ? `<span class="grupo-meta">${[membrosTxt, xpTxt].filter(Boolean).join(' · ')}</span>` : ''}
-                <button class="btn-ver-gold" data-jid="${jidEsc}">🪙 Ver Gold</button>
+                <button class="btn-ver-gold" data-jid="${jidEsc}">🪙 Ver Prata</button>
               </div>
               <div class="grupo-toggles">
                 <label class="toggle-wrap">
@@ -1156,15 +1156,15 @@ const titulosAbas  = {
                 </label>
               </div>
             </div>
-            <!-- Painel de gold (oculto por padrão) -->
+            <!-- Painel de Prata (oculto por padrão) -->
             <div class="gold-painel hidden" id="gold-painel-${jidEsc.replace(/[^a-z0-9]/gi,'_')}">
-              <div class="gold-painel-titulo">🪙 Ranking Gold do Grupo</div>
+              <div class="gold-painel-titulo">🪙 Ranking de saldo em Prata do grupo</div>
               <div class="gold-loading" id="gold-loading-${jidEsc.replace(/[^a-z0-9]/gi,'_')}">
                 <div class="spinner"></div> Carregando...
               </div>
               <div class="gold-rank-lista" id="gold-rank-${jidEsc.replace(/[^a-z0-9]/gi,'_')}"></div>
 
-              <div class="gold-painel-titulo" style="margin-top:.85rem;">Ajustar Gold de Membro</div>
+              <div class="gold-painel-titulo" style="margin-top:.85rem;">Ajustar saldo em Prata do membro</div>
               <div class="gold-acoes">
                 <div class="field" style="flex:2;min-width:160px;">
                   <label>Membro (número ou JID)</label>
@@ -1211,7 +1211,7 @@ const titulosAbas  = {
       show('grupos-lista');
     }
 
-    /* ===== GOLD PAINEL (por grupo) ===== */
+    /* ===== PAINEL DE PRATA (por grupo) ===== */
     const goldPainelAberto = new Set();
 
     function idSafe(jid) {
@@ -1253,7 +1253,7 @@ const titulosAbas  = {
         loading.style.display = 'none';
 
         if (!ranking || !ranking.length) {
-          lista.innerHTML = '<div class="dash-vazio">Nenhum membro com gold neste grupo.</div>';
+          lista.innerHTML = '<div class="dash-vazio">Nenhum membro com saldo em Prata neste grupo.</div>';
           return;
         }
 
@@ -1294,18 +1294,18 @@ const titulosAbas  = {
 
       if (op === 'reset-grupo') {
         abrirModal(
-          'Zerar Gold do Grupo',
-          `Isso vai zerar o gold de TODOS os membros de "${nomeGrupoPorJid(jid)}". Não pode ser desfeito!`,
+          'Zerar saldo em Prata do grupo',
+          `Isso vai zerar o saldo em Prata de TODOS os membros de "${nomeGrupoPorJid(jid)}". Não pode ser desfeito!`,
           async () => {
             try {
               const res = await fetch(`${API}/admin/grupo/${encodeURIComponent(jid)}/gold/reset`, {
                 method: 'DELETE', headers: adminHeaders()
               });
               if (!res.ok) throw new Error();
-              toast('✅ Gold de todos os membros zerado.');
+              toast('✅ Saldos em Prata de todos os membros zerados.');
               await carregarGoldRanking(jid);
             } catch {
-              toast('Erro ao zerar gold do grupo.', 'erro');
+              toast('Erro ao zerar saldo em Prata do grupo.', 'erro');
             }
           }
         );
@@ -1318,8 +1318,8 @@ const titulosAbas  = {
         if (!membro) { toast('Digite o número ou JID do membro.', 'erro'); return; }
         const jidMembro = membro.includes('@') ? membro : `${membro}@s.whatsapp.net`;
         abrirModal(
-          'Zerar Gold do Membro',
-          `Isso vai zerar TODO o gold de ${membro} em "${nomeGrupoPorJid(jid)}". Não pode ser desfeito!`,
+          'Zerar saldo em Prata do membro',
+          `Isso vai zerar TODO o saldo em Prata de ${membro} em "${nomeGrupoPorJid(jid)}". Não pode ser desfeito!`,
           async () => {
             try {
               const res = await fetch(`${API}/admin/usuario/gold/reset-grupo`, {
@@ -1328,11 +1328,11 @@ const titulosAbas  = {
   body: JSON.stringify({ idWhatsApp: jidMembro, idGrupo: jid })
 });
               if (!res.ok) throw new Error();
-              toast('✅ Gold do membro zerado.');
+              toast('✅ Saldo em Prata do membro zerado.');
               if (membroInput) membroInput.value = '';
               await carregarGoldRanking(jid);
             } catch {
-              toast('Erro ao zerar gold do membro.', 'erro');
+              toast('Erro ao zerar saldo em Prata do membro.', 'erro');
             }
           }
         );
@@ -1348,10 +1348,10 @@ const titulosAbas  = {
       if (!valor || valor <= 0) { toast('Digite uma quantidade válida.', 'erro'); return; }
 
       const nomeG  = nomeGrupoPorJid(jid);
-      const titulo = op === 'dar' ? 'Dar Gold' : 'Remover Gold';
+      const titulo = op === 'dar' ? 'Dar Prata' : 'Remover Prata';
       const texto  = op === 'dar'
-        ? `Dar ${formatNum(valor)} gold para ${membro} em "${nomeG}"?`
-        : `Remover ${formatNum(valor)} gold de ${membro} em "${nomeG}"?`;
+        ? `Dar ${formatNum(valor)} de Prata para ${membro} em "${nomeG}"?`
+        : `Remover ${formatNum(valor)} de Prata de ${membro} em "${nomeG}"?`;
 
       abrirModal(titulo, texto, async () => {
         try {
@@ -1362,12 +1362,12 @@ const titulosAbas  = {
             body: JSON.stringify({ idGrupo: jid, valor, operacao: op })
           });
           if (!res.ok) throw new Error();
-          toast(`✅ Gold ${op === 'dar' ? 'adicionado' : 'removido'} com sucesso.`);
+          toast(`✅ Saldo em Prata ${op === 'dar' ? 'adicionado' : 'removido'} com sucesso.`);
           if (membroInput) membroInput.value = '';
           if (qtyInput)    qtyInput.value    = '';
           await carregarGoldRanking(jid);
         } catch {
-          toast('Erro ao ajustar gold.', 'erro');
+          toast('Erro ao ajustar saldo em Prata.', 'erro');
         }
       });
     }
@@ -1915,10 +1915,10 @@ const titulosAbas  = {
       const nomeG = $('usr-acao-grupo').selectedOptions[0]?.text || jid;
 
       abrirModal(
-        operacao === 'dar' ? 'Dar Gold' : 'Remover Gold',
+        operacao === 'dar' ? 'Dar Prata' : 'Remover Prata',
         operacao === 'dar'
-          ? `Dar ${formatNum(valor)} gold para ${nomeU} em "${nomeG}"?`
-          : `Remover ${formatNum(valor)} gold de ${nomeU} em "${nomeG}"?`,
+          ? `Dar ${formatNum(valor)} de Prata para ${nomeU} em "${nomeG}"?`
+          : `Remover ${formatNum(valor)} de Prata de ${nomeU} em "${nomeG}"?`,
         async () => {
           try {
             const res = await fetch(`${API}/admin/usuario/${encodeURIComponent(usuarioAtual.idWhatsApp)}/gold`, {
@@ -1927,10 +1927,10 @@ const titulosAbas  = {
               body: JSON.stringify({ idGrupo: jid, valor, operacao })
             });
             if (!res.ok) throw new Error();
-            toast(`✅ Gold ${operacao === 'dar' ? 'adicionado' : 'removido'} com sucesso.`);
+            toast(`✅ Saldo em Prata ${operacao === 'dar' ? 'adicionado' : 'removido'} com sucesso.`);
             buscarUsuario();
           } catch {
-            toast('Erro ao ajustar gold.', 'erro');
+            toast('Erro ao ajustar saldo em Prata.', 'erro');
           }
         }
       );
@@ -1943,18 +1943,18 @@ const titulosAbas  = {
       if (!usuarioAtual) return;
       const nomeU = usuarioAtual.nome || usuarioAtual.idWhatsApp;
       abrirModal(
-        'Zerar Gold',
-        `Zerar TODO o gold de ${nomeU} em todos os grupos?`,
+        'Zerar Prata',
+        `Zerar TODO o saldo em Prata de ${nomeU} em todos os grupos?`,
         async () => {
           try {
             const res = await fetch(`${API}/admin/usuario/${encodeURIComponent(usuarioAtual.idWhatsApp)}/gold/reset`, {
               method: 'DELETE', headers: adminHeaders()
             });
             if (!res.ok) throw new Error();
-            toast('✅ Gold zerado em todos os grupos.');
+            toast('✅ Saldo em Prata zerado em todos os grupos.');
             buscarUsuario();
           } catch {
-            toast('Erro ao zerar gold.', 'erro');
+            toast('Erro ao zerar saldo em Prata.', 'erro');
           }
         }
       );
@@ -1975,8 +1975,8 @@ const titulosAbas  = {
       const nomeGrupo  = $('transfer-grupo-origem').selectedOptions[0]?.text || idGrupoOrigem;
 
       abrirModal(
-        'Transferir Gold',
-        `Transferir ${formatNum(valor)} gold de ${nomeOrigem} para ${destino} no grupo "${nomeGrupo}"?`,
+        'Transferir Prata',
+        `Transferir ${formatNum(valor)} de Prata de ${nomeOrigem} para ${destino} no grupo "${nomeGrupo}"?`,
         async () => {
           try {
             const res = await fetch(`${API}/admin/gold/transferir`, {
@@ -1990,12 +1990,12 @@ const titulosAbas  = {
               })
             });
             if (!res.ok) throw new Error();
-            toast(`✅ ${formatNum(valor)} gold transferido com sucesso.`);
+            toast(`✅ Transferência de ${formatNum(valor)} Prata concluída com sucesso.`);
             $('transfer-destino').value = '';
             $('transfer-valor').value   = '';
             buscarUsuario();
           } catch {
-            toast('Erro ao transferir gold.', 'erro');
+            toast('Erro ao transferir saldo em Prata.', 'erro');
           }
         }
       );

@@ -63,7 +63,7 @@
 <section class="hero">
   <p class="hero-eyebrow">Tico Bot · Cassino</p>
   <h1 class="hero-title">Cassino 🎰</h1>
-  <p class="hero-sub">Aposte seu gold e tente a sorte nos slots — resultados salvos no grupo.</p>
+  <p class="hero-sub">Aposte sua Prata e tente a sorte nos slots — resultados salvos no grupo.</p>
 </section>
 
 <!-- ══════════ MAIN ══════════ -->
@@ -93,7 +93,7 @@
       </div>
       <div class="saldo-chip" id="saldo-chip" style="display:none">
         <span>💰 Saldo disponível</span>
-        <strong id="saldo-val">— gold</strong>
+        <strong id="saldo-val">— Prata</strong>
       </div>
     </div>
 
@@ -175,11 +175,11 @@
         </div>
         <div class="session-stat pos" id="stat-ganhos">
           <span>Ganhos</span>
-          <strong id="stat-ganhos-val">0 gold</strong>
+          <strong id="stat-ganhos-val">0 Prata</strong>
         </div>
         <div class="session-stat neg" id="stat-perdas">
           <span>Perdas</span>
-          <strong id="stat-perdas-val">0 gold</strong>
+          <strong id="stat-perdas-val">0 Prata</strong>
         </div>
       </div>
 
@@ -333,10 +333,10 @@ async function liberarRodadaAposErro(jogo, requestId) {
       opt.text = `${nomeGrupo} — ${fmtNum(saldoAtual)} 💰`;
     }
     const saldoEl = $('saldo-val');
-    if (saldoEl) saldoEl.textContent = fmtNum(saldoAtual) + ' gold';
+    if (saldoEl) saldoEl.textContent = fmtNum(saldoAtual) + ' Prata';
 
     const liberar = window.confirm(
-      `A rodada anterior retornou erro. Atualizei o saldo do grupo para ${fmtNum(saldoAtual)} gold. Confira o saldo e o histórico antes de continuar. Deseja liberar uma nova aposta?`
+      `A rodada anterior retornou erro. Atualizei o saldo do grupo para ${fmtNum(saldoAtual)} Prata. Confira o saldo e o histórico antes de continuar. Deseja liberar uma nova aposta?`
     );
     if (liberar) {
       limparRequestId(jogo, requestId);
@@ -430,8 +430,8 @@ function atualizarSessao(lucroLiq, aposta) {
 
   $('session-stats').style.display = 'grid';
   $('stat-rodadas-val').textContent = sessaoRodadas;
-  $('stat-ganhos-val').textContent  = fmtNum(sessaoGanhos) + ' gold';
-  $('stat-perdas-val').textContent  = fmtNum(sessaoPerdas) + ' gold';
+  $('stat-ganhos-val').textContent  = fmtNum(sessaoGanhos) + ' Prata';
+  $('stat-perdas-val').textContent  = fmtNum(sessaoPerdas) + ' Prata';
 
   ultimaAposta = aposta;
   const btnRepeat = $('btn-repeat');
@@ -535,7 +535,7 @@ function onGrupoChange() {
     saldoChip.style.display   = 'flex';
     slotMachine.style.display = 'block';
     histCard.style.display    = 'block';
-    $('saldo-val').textContent = fmtNum(saldoAtual) + ' gold';
+    $('saldo-val').textContent = fmtNum(saldoAtual) + ' Prata';
     sessionHistory = [];
     $('history-list').replaceChildren();
     validarAposta();
@@ -624,10 +624,10 @@ function mostrarResultado(data) {
   };
   titleEl.textContent = labels[tipo] || '—';
 
-  $('result-aposta').textContent  = fmtNum(aposta) + ' gold';
+  $('result-aposta').textContent  = fmtNum(aposta) + ' Prata';
   $('result-mult').textContent    = mult > 0 ? mult + 'x' : '—';
-  $('result-premio').textContent  = premio > 0 ? '+' + fmtNum(premio) + ' gold' : '—';
-  $('result-saldo').textContent   = fmtNum(saldoFinal) + ' gold';
+  $('result-premio').textContent  = premio > 0 ? '+' + fmtNum(premio) + ' Prata' : '—';
+  $('result-saldo').textContent   = fmtNum(saldoFinal) + ' Prata';
 
   /* Cor do prêmio */
   const premioWrap = $('result-premio-wrap');
@@ -638,8 +638,8 @@ function mostrarResultado(data) {
   /* Status */
   const statusEl = $('slot-status');
   statusEl.textContent = isWin
-    ? `+${fmtNum(lucroLiq)} gold 🎉`
-    : `-${fmtNum(aposta)} gold 😢`;
+    ? `+${fmtNum(lucroLiq)} Prata 🎉`
+    : `-${fmtNum(aposta)} Prata 😢`;
   statusEl.className = 'slot-status ' + (isWin ? 'win' : 'lose');
 
   /* Rolos — cor de borda */
@@ -654,7 +654,7 @@ function mostrarResultado(data) {
 
   /* Atualiza saldo exibido */
   saldoAtual = saldoFinal;
-  $('saldo-val').textContent = fmtNum(saldoFinal) + ' gold';
+  $('saldo-val').textContent = fmtNum(saldoFinal) + ' Prata';
 
   /* Atualiza option do select */
   const sel = $('grupo-select');
@@ -701,7 +701,7 @@ function addHistory(r1, r2, r3, lucroLiq) {
     <div class="history-item">
       <span class="history-symbols">${h.r1} ${h.r2} ${h.r3}</span>
       <span class="history-val ${h.lucroLiq >= 0 ? 'pos' : 'neg'}">
-        ${h.lucroLiq >= 0 ? '+' : ''}${fmtNum(h.lucroLiq)} gold
+        ${h.lucroLiq >= 0 ? '+' : ''}${fmtNum(h.lucroLiq)} Prata
       </span>
     </div>
   `).join('');
@@ -766,7 +766,7 @@ async function girar() {
   const aposta = parseApostaInput();
 
   if (aposta === null || aposta < 10) {
-    showToast('Aposta mínima: 10 gold!');
+    showToast('Aposta mínima: 10 Prata!');
     return;
   }
   if (aposta > saldoAtual) {
@@ -774,7 +774,7 @@ async function girar() {
     return;
   }
   if (aposta > 100_000) {
-    showToast('Aposta máxima: 100.000 gold');
+    showToast('Aposta máxima: 100.000 Prata');
     return;
   }
 
@@ -877,8 +877,8 @@ async function girar() {
   const isWin = apiData.lucroLiq > 0;
   showToast(
     isWin
-      ? `+${fmtNum(apiData.lucroLiq)} gold! 🎉`
-      : `-${fmtNum(apiData.aposta)} gold 😢`,
+      ? `+${fmtNum(apiData.lucroLiq)} Prata! 🎉`
+      : `-${fmtNum(apiData.aposta)} Prata 😢`,
     isWin ? 'win' : 'lose'
   );
 }
