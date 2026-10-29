@@ -160,11 +160,11 @@ test('renderiza a imagem real do pet e usa um caminho estático conhecido', () =
   };
   vm.runInContext('renderPet(petTeste)', context);
   const card = elements.get('pet-card');
-  assert.match(card.innerHTML, /src="image\/Pet\/bolsonaro\.png"/);
+  assert.match(card.innerHTML, /src="image\/Pet\/bolsonaro\.jpg"/);
   assert.match(card.innerHTML, /alt="Miau"/);
   assert.match(card.innerHTML, /Miau/);
   assert.match(card.innerHTML, /Nível 3/);
-  assert.equal(fs.existsSync(path.join(__dirname, '..', 'image', 'Pet', 'bolsonaro.png')), true);
+  assert.equal(fs.existsSync(path.join(__dirname, '..', 'image', 'Pet', 'bolsonaro.jpg')), true);
   assert.equal(elements.get('pet-vazio').classList.contains('hidden'), true);
 });
 
