@@ -140,8 +140,9 @@ test('normaliza e escapa dados do pet antes de montar o cartão', () => {
   vm.runInContext('renderPet(petTeste)', context);
   const card = elements.get('pet-card');
   assert.match(card.innerHTML, /&lt;svg onload=alert\(1\)&gt;/);
-  assert.match(card.innerHTML, /&lt;img src=x&gt;/);
+  assert.match(card.innerHTML, /🐾/);
   assert.doesNotMatch(card.innerHTML, /<img src=x>/);
+  assert.doesNotMatch(card.innerHTML, /src="<img/);
   assert.match(card.innerHTML, /Nível 1/);
   assert.match(card.innerHTML, /width:100%;background:#ff6482/);
   assert.match(card.innerHTML, /width:0%;background:#ffd060/);
@@ -149,6 +150,22 @@ test('normaliza e escapa dados do pet antes de montar o cartão', () => {
   vm.runInContext('renderPet(null)', context);
   assert.equal(card.innerHTML, '');
   assert.equal(elements.get('pet-vazio').classList.contains('hidden'), false);
+});
+
+test('renderiza a imagem real do pet e usa um caminho estático conhecido', () => {
+  const { context, elements } = createContext();
+  context.petTeste = {
+    name: 'Miau', type: 'bolsonaro', rarity: 'RARO', level: 3,
+    energy: 72, fullness: 65, happiness: 87,
+  };
+  vm.runInContext('renderPet(petTeste)', context);
+  const card = elements.get('pet-card');
+  assert.match(card.innerHTML, /src="image\/Pet\/bolsonaro\.png"/);
+  assert.match(card.innerHTML, /alt="Miau"/);
+  assert.match(card.innerHTML, /Miau/);
+  assert.match(card.innerHTML, /Nível 3/);
+  assert.equal(fs.existsSync(path.join(__dirname, '..', 'image', 'Pet', 'bolsonaro.png')), true);
+  assert.equal(elements.get('pet-vazio').classList.contains('hidden'), true);
 });
 
 test('o perfil só troca o token mágico uma vez e não depende de Chart.js para renderizar', () => {
@@ -186,6 +203,7 @@ test('exibe o XP dentro do nível atual e calcula a barra corretamente', () => {
   assert.equal(elements.get('xp-prox-txt').textContent, 'Nível 113: 59.2k XP total');
   assert.equal(elements.get('barra-xp').style.width, '78%');
   assert.equal(elements.get('perfil-numero').textContent, '+5511999999999');
+  assert.equal(elements.get('act-quiz').textContent, '4');
 });
 
 

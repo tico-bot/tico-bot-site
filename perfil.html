@@ -451,6 +451,20 @@
         </div>`;
     }
 
+    const PET_IMAGE_MAP = Object.freeze({
+      'arrogante': 'image/Pet/arrogante.png',
+      'bolsonaro': 'image/Pet/bolsonaro.png',
+      'douglas': 'image/Pet/douglas.png',
+      'flavio-bolsonaro': 'image/Pet/flavio-bolsonaro.jpeg',
+      'lula': 'image/Pet/lula.jpeg',
+      'manoel-gomes-judeo': 'image/Pet/manoel-gomes-judeo.png',
+      'oruam': 'image/Pet/oruam.png',
+      'rodney': 'image/Pet/rodney.png',
+      'seu-ze': 'image/Pet/seu-ze.png',
+      'mbappeditador': 'image/Pet/mbappeditador.png',
+      'yuri22': 'image/Pet/yuri22.png',
+    });
+
     function renderPet(pet) {
       const card = $('pet-card');
       if (!card) return;
@@ -463,7 +477,10 @@
 
       hide('pet-vazio');
       const nomePet = pet.nome ?? pet.name;
-      const tipoPet = typeof pet.type === 'string' && pet.type.trim() ? pet.type : '🐾';
+      const tipoPet = typeof pet.type === 'string' ? pet.type.trim().toLowerCase() : '';
+      // Usa apenas caminhos de imagens predefinidos para não transformar o campo
+      // `type` do MongoDB em um caminho arbitrário controlado por dados do usuário.
+      const imagemPet = PET_IMAGE_MAP[tipoPet] || null;
       const raridade = typeof pet.rarity === 'string' && pet.rarity.trim()
         ? pet.rarity.trim()
         : 'Comum';
@@ -496,7 +513,9 @@
       card.innerHTML = `
         <div class="pet-card-wrap">
           <div class="pet-avatar" style="border-color:${cor};box-shadow:0 0 18px ${cor}33;">
-            ${escapeHtml(tipoPet)}
+            ${imagemPet
+              ? `<img src="${imagemPet}" alt="${escapeHtml(nomePet)}" loading="lazy" decoding="async" />`
+              : '<span aria-hidden="true">🐾</span>'}
           </div>
           <div class="pet-info">
             <div class="pet-nome">${escapeHtml(nomePet)}</div>
