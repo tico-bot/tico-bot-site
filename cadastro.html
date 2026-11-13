@@ -79,10 +79,9 @@
     </div>
   </div>
 
+  <script src="Js/api-config.js"></script>
   <script>
-    const API = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-      ? 'http://localhost:3000/api'
-      : 'https://tico-bot-6jpn.onrender.com/api';
+    const API = window.TICO_API_BASE || 'https://tico-bot-6jpn.onrender.com/api';
 
     const legacyJwt = localStorage.getItem('jwt');
     if (legacyJwt && !sessionStorage.getItem('piro_jwt')) sessionStorage.setItem('piro_jwt', legacyJwt);

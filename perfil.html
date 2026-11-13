@@ -218,10 +218,9 @@
     Tico Bot &copy; 2025 &mdash; feito com 🔥
   </footer>
 
+  <script src="Js/api-config.js"></script>
   <script>
-    const API = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-      ? 'http://localhost:3000/api'
-      : 'https://tico-bot-6jpn.onrender.com/api';
+    const API = window.TICO_API_BASE || 'https://tico-bot-6jpn.onrender.com/api';
 
     const $    = id => document.getElementById(id);
     const show = id => $(id).classList.remove('hidden');
@@ -797,6 +796,9 @@
             !Number.isFinite(meData.xp) || !Number.isFinite(meData.level)) {
           throw new Error('A API retornou dados inválidos para o perfil. Atualize a página e tente novamente.');
         }
+
+        // Só memoriza a origem temporária depois de a autenticação e o perfil serem aceites.
+        window.confirmarApiLocalTico?.();
 
         // ── Renderiza
         hide('tela-loading');

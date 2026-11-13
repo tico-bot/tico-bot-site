@@ -792,8 +792,9 @@
 
   <div id="toast" class="toast hidden"></div>
 
+  <script src="Js/api-config.js"></script>
   <script>
-    const API = 'https://tico-bot-6jpn.onrender.com/api';
+    const API = window.TICO_API_BASE || 'https://tico-bot-6jpn.onrender.com/api';
 
     /* ===== UTILITÁRIOS ===== */
     const $ = id => document.getElementById(id);
