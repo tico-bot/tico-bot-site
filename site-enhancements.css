@@ -34,8 +34,8 @@ button, [role="button"] { touch-action: manipulation; }
 :where(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]), select, textarea) { min-height: 44px; max-width: 100%; border-radius: var(--ios-radius-xs) !important; border-color: var(--ios-glass-border) !important; scroll-margin-block: 1rem; }
 textarea { min-height: 100px; resize: vertical; }
 :where(input, select, textarea):focus { border-color: var(--ios-accent) !important; box-shadow: 0 0 0 4px var(--ios-focus) !important; }
-:where(button, .btn, .btn-primary, .btn-secondary, .btn-ghost, .btn-spin, .btn-correr, .modal-btn, .action-btn, .submit-btn, input[type="submit"]) { min-height: 42px; border-radius: 999px !important; transition: transform .18s ease, box-shadow .18s ease, filter .18s ease; }
-:where(button, .btn, .btn-primary, .btn-secondary, .btn-ghost, .btn-spin, .btn-correr, .modal-btn, .action-btn, .submit-btn, input[type="submit"]):active { transform: scale(.975); }
+:where(button:not(.toggle), .btn:not(.toggle), .btn-primary:not(.toggle), .btn-secondary:not(.toggle), .btn-ghost:not(.toggle), .btn-spin:not(.toggle), .btn-correr:not(.toggle), .modal-btn:not(.toggle), .action-btn:not(.toggle), .submit-btn:not(.toggle), input[type="submit"]) { min-height: 42px; border-radius: 999px !important; transition: transform .18s ease, box-shadow .18s ease, filter .18s ease; }
+:where(button:not(.toggle), .btn:not(.toggle), .btn-primary:not(.toggle), .btn-secondary:not(.toggle), .btn-ghost:not(.toggle), .btn-spin:not(.toggle), .btn-correr:not(.toggle), .modal-btn:not(.toggle), .action-btn:not(.toggle), .submit-btn:not(.toggle), input[type="submit"]):active { transform: scale(.975); }
 :where(button:disabled, input:disabled, select:disabled, textarea:disabled) { cursor: not-allowed; opacity: .58; }
 .tabela-wrap, .table-wrap, .table-responsive, .table-container { max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: var(--ios-radius-sm); }
 table { max-width: 100%; }
@@ -51,7 +51,7 @@ table { max-width: 100%; }
   :where(.auth-card, .login-card, .card, .panel, .modal-box, .modal-content, .dialog) { max-width: 100%; }
   :where(.form-row, .form-grid, .stats-grid, .profile-grid, .dashboard-grid) { min-width: 0; }
   :where(input, select, textarea, button) { font-size: max(16px, 1em); }
-  :where(button, .btn, .btn-primary, .btn-secondary, .btn-ghost, .btn-spin, .btn-correr, .modal-btn) { min-height: 44px; }
+  :where(button:not(.toggle), .btn:not(.toggle), .btn-primary:not(.toggle), .btn-secondary:not(.toggle), .btn-ghost:not(.toggle), .btn-spin:not(.toggle), .btn-correr:not(.toggle), .modal-btn:not(.toggle)) { min-height: 44px; }
   .modal-box, .modal-content, .dialog, [role="dialog"] { width: min(94vw, 600px); }
 }
 @media (max-width: 420px) {

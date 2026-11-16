@@ -164,6 +164,11 @@
     .btn-inv-rem   { background: none; border: 1px solid var(--border2); color: var(--muted); border-radius: 5px; font-size: 0.72rem; padding: 0.14rem 0.5rem; cursor: pointer; white-space: nowrap; }
     .btn-inv-rem:hover { border-color: var(--vermelho); color: var(--vermelho); }
     .inv-vazio { color: var(--muted); font-size: 0.85rem; padding: 0.25rem 0; }
+    .inv-adicionar-grid { display: grid; grid-template-columns: minmax(145px, 1fr) minmax(200px, 2fr) minmax(80px, .55fr) auto; gap: .55rem; align-items: end; }
+    .inv-adicionar-grid .field { min-width: 0; }
+    .inv-adicionar-grid select, .inv-adicionar-grid input { width: 100%; min-height: 36px; font-size: .82rem; padding: .4rem .65rem; }
+    .inv-catalogo-hint { color: var(--muted); font-size: .72rem; line-height: 1.45; margin: .45rem 0 0; }
+    @media (max-width: 620px) { .inv-adicionar-grid { grid-template-columns: 1fr 1fr; } .inv-adicionar-grid .inv-campo-item { grid-column: 1 / -1; } .inv-adicionar-grid .btn-gold-dar { width: 100%; } }
     .usr-acoes-grid { display: flex; flex-direction: column; gap: 0.75rem; }
     .usr-acao-row { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: flex-end; padding: 0.75rem; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); }
     .usr-acao-row .field { min-width: 120px; flex: 1; gap: 0.25rem; }
@@ -621,17 +626,32 @@
       <!-- Lista de itens -->
       <div id="usr-inv-lista" class="inv-lista hidden"></div>
 
-      <!-- Adicionar item -->
-      <div style="display:flex;flex-wrap:wrap;gap:0.5rem;align-items:flex-end;border-top:1px solid var(--border);padding-top:0.65rem;">
-        <div class="field" style="flex:2;min-width:140px;">
-          <label>Nome do item</label>
-          <input type="text" id="usr-inv-item-nome" placeholder="Ex: Espada Lendária" />
+      <!-- Adicionar item: catálogo dividido por áreas -->
+      <div style="border-top:1px solid var(--border);padding-top:0.75rem;">
+        <div class="inv-adicionar-grid">
+          <div class="field">
+            <label for="usr-inv-item-area">Área do item</label>
+            <select id="usr-inv-item-area">
+              <option value="">Selecione uma área...</option>
+            </select>
+          </div>
+          <div class="field inv-campo-item" id="usr-inv-item-catalogo-wrap">
+            <label for="usr-inv-item-nome">Item disponível</label>
+            <select id="usr-inv-item-nome" disabled>
+              <option value="">Escolha uma área primeiro...</option>
+            </select>
+          </div>
+          <div class="field inv-campo-item hidden" id="usr-inv-item-personalizado-wrap">
+            <label for="usr-inv-item-personalizado">Nome personalizado</label>
+            <input type="text" id="usr-inv-item-personalizado" placeholder="Digite o nome do item" maxlength="100" />
+          </div>
+          <div class="field" style="max-width:90px;">
+            <label for="usr-inv-item-qtd">Qtd</label>
+            <input type="number" id="usr-inv-item-qtd" min="1" value="1" placeholder="1" />
+          </div>
+          <button class="btn-gold-dar" id="btn-inv-adicionar">+ Adicionar</button>
         </div>
-        <div class="field" style="max-width:90px;">
-          <label>Qtd</label>
-          <input type="number" id="usr-inv-item-qtd" min="1" value="1" placeholder="1" />
-        </div>
-        <button class="btn-gold-dar" id="btn-inv-adicionar">+ Adicionar</button>
+        <p class="inv-catalogo-hint" id="usr-inv-catalogo-hint">O catálogo reúne os itens do Tico, separados por área. Também é possível adicionar um item personalizado.</p>
       </div>
 
     </div>
@@ -793,6 +813,7 @@
   <div id="toast" class="toast hidden"></div>
 
   <script src="Js/api-config.js"></script>
+  <script src="Js/admin-inventario-catalogo.js"></script>
   <script>
     const API = window.TICO_API_BASE || 'https://tico-bot-6jpn.onrender.com/api';
 
@@ -1126,35 +1147,43 @@ const titulosAbas  = {
                 ${(membrosTxt || xpTxt) ? `<span class="grupo-meta">${[membrosTxt, xpTxt].filter(Boolean).join(' · ')}</span>` : ''}
                 <button class="btn-ver-gold" data-jid="${jidEsc}">🪙 Ver Prata</button>
               </div>
-              <div class="grupo-toggles">
-                <label class="toggle-wrap">
-                  <span class="toggle-label">Bot</span>
-                  <button class="toggle ${g.config?.botAtivo !== false ? 'on' : ''}"
-                    data-jid="${jidEsc}" data-campo="botAtivo"
-                    aria-pressed="${g.config?.botAtivo !== false}"
-                    aria-label="Toggle Bot"></button>
-                </label>
-                <label class="toggle-wrap">
-                  <span class="toggle-label">XP</span>
-                  <button class="toggle ${g.config?.xpAtivo !== false ? 'on' : ''}"
-                    data-jid="${jidEsc}" data-campo="xpAtivo"
-                    aria-pressed="${g.config?.xpAtivo !== false}"
-                    aria-label="Toggle XP"></button>
-                </label>
-                <label class="toggle-wrap">
-                  <span class="toggle-label">Anti-Link</span>
-                  <button class="toggle ${g.config?.antiLink ? 'on' : ''}"
-                    data-jid="${jidEsc}" data-campo="antiLink"
-                    aria-pressed="${!!g.config?.antiLink}"
-                    aria-label="Toggle Anti-Link"></button>
-                </label>
-                <label class="toggle-wrap">
-                  <span class="toggle-label">Boas-Vindas</span>
-                  <button class="toggle ${g.config?.boasVindas !== false ? 'on' : ''}"
-                    data-jid="${jidEsc}" data-campo="boasVindas"
-                    aria-pressed="${g.config?.boasVindas !== false}"
-                    aria-label="Toggle Boas-Vindas"></button>
-                </label>
+              <div class="grupo-toggles" role="group" aria-label="Configurações do grupo">
+                <div class="toggle-wrap ${g.config?.botAtivo !== false ? 'is-active' : ''}">
+                  <div class="toggle-heading"><span class="toggle-icon" aria-hidden="true">🤖</span><span class="toggle-label">Bot</span></div>
+                  <div class="toggle-control">
+                    <button type="button" class="toggle ${g.config?.botAtivo !== false ? 'on' : ''}"
+                      data-jid="${jidEsc}" data-campo="botAtivo" data-label="Bot"
+                      aria-pressed="${g.config?.botAtivo !== false}" aria-label="Bot"></button>
+                    <span class="toggle-status" aria-live="polite">${g.config?.botAtivo !== false ? 'Ligado' : 'Desligado'}</span>
+                  </div>
+                </div>
+                <div class="toggle-wrap ${g.config?.xpAtivo !== false ? 'is-active' : ''}">
+                  <div class="toggle-heading"><span class="toggle-icon" aria-hidden="true">⭐</span><span class="toggle-label">XP</span></div>
+                  <div class="toggle-control">
+                    <button type="button" class="toggle ${g.config?.xpAtivo !== false ? 'on' : ''}"
+                      data-jid="${jidEsc}" data-campo="xpAtivo" data-label="XP"
+                      aria-pressed="${g.config?.xpAtivo !== false}" aria-label="XP"></button>
+                    <span class="toggle-status" aria-live="polite">${g.config?.xpAtivo !== false ? 'Ligado' : 'Desligado'}</span>
+                  </div>
+                </div>
+                <div class="toggle-wrap ${!!g.config?.antiLink ? 'is-active' : ''}">
+                  <div class="toggle-heading"><span class="toggle-icon" aria-hidden="true">🔗</span><span class="toggle-label">Anti-Link</span></div>
+                  <div class="toggle-control">
+                    <button type="button" class="toggle ${g.config?.antiLink ? 'on' : ''}"
+                      data-jid="${jidEsc}" data-campo="antiLink" data-label="Anti-Link"
+                      aria-pressed="${!!g.config?.antiLink}" aria-label="Anti-Link"></button>
+                    <span class="toggle-status" aria-live="polite">${g.config?.antiLink ? 'Ligado' : 'Desligado'}</span>
+                  </div>
+                </div>
+                <div class="toggle-wrap ${g.config?.boasVindas !== false ? 'is-active' : ''}">
+                  <div class="toggle-heading"><span class="toggle-icon" aria-hidden="true">👋</span><span class="toggle-label">Boas-Vindas</span></div>
+                  <div class="toggle-control">
+                    <button type="button" class="toggle ${g.config?.boasVindas !== false ? 'on' : ''}"
+                      data-jid="${jidEsc}" data-campo="boasVindas" data-label="Boas-Vindas"
+                      aria-pressed="${g.config?.boasVindas !== false}" aria-label="Boas-Vindas"></button>
+                    <span class="toggle-status" aria-live="polite">${g.config?.boasVindas !== false ? 'Ligado' : 'Desligado'}</span>
+                  </div>
+                </div>
               </div>
             </div>
             <!-- Painel de Prata (oculto por padrão) -->
@@ -1373,14 +1402,25 @@ const titulosAbas  = {
       });
     }
 
+    function atualizarVisualToggle(btn, ativo) {
+      btn.classList.toggle('on', ativo);
+      btn.setAttribute('aria-pressed', String(ativo));
+      const cartao = btn.closest('.toggle-wrap');
+      cartao?.classList.toggle('is-active', ativo);
+      const estado = btn.closest('.toggle-control')?.querySelector('.toggle-status');
+      if (estado) estado.textContent = ativo ? 'Ligado' : 'Desligado';
+      const nome = btn.dataset.label || 'Configuração';
+      btn.setAttribute('aria-label', `${nome}: ${ativo ? 'ligado' : 'desligado'}`);
+      btn.title = `${ativo ? 'Desativar' : 'Ativar'} ${nome}`;
+    }
+
     async function alternarToggle(btn) {
       const jid      = btn.dataset.jid;
       const campo    = btn.dataset.campo;
       const novoValor = !btn.classList.contains('on');
 
       btn.disabled = true;
-      btn.classList.toggle('on', novoValor);
-      btn.setAttribute('aria-pressed', String(novoValor));
+      atualizarVisualToggle(btn, novoValor);
 
       try {
         const res = await fetch(`${API}/admin/grupo/${encodeURIComponent(jid)}/config`, {
@@ -1394,8 +1434,7 @@ const titulosAbas  = {
         atualizarDashboard();
         toast('Configuração salva.');
       } catch {
-        btn.classList.toggle('on', !novoValor);
-        btn.setAttribute('aria-pressed', String(!novoValor));
+        atualizarVisualToggle(btn, !novoValor);
         toast('Erro ao salvar configuração. Tente novamente.', 'erro');
       } finally {
         btn.disabled = false;
@@ -2247,14 +2286,75 @@ $('btn-calc-xp-level').addEventListener('click', () => {
       }
     }
 
+    function inicializarCatalogoInventario() {
+      const areaEl = $('usr-inv-item-area');
+      const itemEl = $('usr-inv-item-nome');
+      if (!areaEl || !itemEl) return;
+
+      const areas = Array.isArray(window.TICO_ADMIN_ITEM_CATALOG)
+        ? window.TICO_ADMIN_ITEM_CATALOG
+        : [];
+      areaEl.replaceChildren(new Option('Selecione uma área...', ''));
+      for (const area of areas) {
+        areaEl.add(new Option(area.label, area.id));
+      }
+      areaEl.add(new Option('✍️ Item personalizado', '__personalizado__'));
+      areaEl.addEventListener('change', atualizarCatalogoInventario);
+      atualizarCatalogoInventario();
+    }
+
+    function atualizarCatalogoInventario() {
+      const areaId = $('usr-inv-item-area')?.value;
+      const itemWrap = $('usr-inv-item-catalogo-wrap');
+      const itemEl = $('usr-inv-item-nome');
+      const customWrap = $('usr-inv-item-personalizado-wrap');
+      const customEl = $('usr-inv-item-personalizado');
+      const hint = $('usr-inv-catalogo-hint');
+      const areas = Array.isArray(window.TICO_ADMIN_ITEM_CATALOG)
+        ? window.TICO_ADMIN_ITEM_CATALOG
+        : [];
+
+      const personalizado = areaId === '__personalizado__';
+      itemWrap?.classList.toggle('hidden', personalizado);
+      customWrap?.classList.toggle('hidden', !personalizado);
+      if (customEl) customEl.value = '';
+
+      if (personalizado) {
+        if (itemEl) {
+          itemEl.replaceChildren(new Option('Item personalizado', ''));
+          itemEl.disabled = true;
+        }
+        if (hint) hint.textContent = 'Use esta opção apenas para um item que não exista nos catálogos do Tico.';
+        return;
+      }
+
+      const area = areas.find(item => item.id === areaId);
+      if (itemEl) {
+        itemEl.replaceChildren(new Option(area ? 'Selecione um item...' : 'Escolha uma área primeiro...', ''));
+        for (const item of (area?.itens || [])) {
+          itemEl.add(new Option(item.nome, item.nome));
+        }
+        itemEl.disabled = !area || !area.itens?.length;
+      }
+      if (hint) {
+        hint.textContent = area
+          ? `${area.itens.length} item(ns) disponíveis nesta área. Os nomes são carregados do catálogo do jogo.`
+          : 'O catálogo reúne os itens do Tico, separados por área. Também é possível adicionar um item personalizado.';
+      }
+    }
+
     async function adicionarItemInventario() {
       if (!usuarioAtual) return;
-      const jid      = $('usr-inv-grupo').value;
-      const nomeItem = $('usr-inv-item-nome').value.trim();
-      const qtd      = parseInt($('usr-inv-item-qtd').value, 10);
+      const jid = $('usr-inv-grupo').value;
+      const areaId = $('usr-inv-item-area')?.value;
+      const nomeItem = areaId === '__personalizado__'
+        ? $('usr-inv-item-personalizado')?.value.trim()
+        : $('usr-inv-item-nome')?.value.trim();
+      const qtd = parseInt($('usr-inv-item-qtd').value, 10);
 
       if (!jid)            { toast('Selecione um grupo.', 'erro'); return; }
-      if (!nomeItem)       { toast('Digite o nome do item.', 'erro'); return; }
+      if (!areaId)         { toast('Selecione a área do item.', 'erro'); return; }
+      if (!nomeItem)       { toast(areaId === '__personalizado__' ? 'Digite o nome do item.' : 'Selecione um item do catálogo.', 'erro'); return; }
       if (!qtd || qtd < 1) { toast('Digite uma quantidade válida (mín. 1).', 'erro'); return; }
 
       const nomeU = usuarioAtual.nome || usuarioAtual.idWhatsApp;
@@ -2275,8 +2375,12 @@ $('btn-calc-xp-level').addEventListener('click', () => {
             );
             if (!res.ok) throw new Error();
             toast('✅ Item adicionado ao inventário.');
-            $('usr-inv-item-nome').value = '';
-            $('usr-inv-item-qtd').value  = '1';
+            if (areaId === '__personalizado__') {
+              $('usr-inv-item-personalizado').value = '';
+            } else {
+              $('usr-inv-item-nome').value = '';
+            }
+            $('usr-inv-item-qtd').value = '1';
             await carregarInventario();
           } catch {
             toast('Erro ao adicionar item.', 'erro');
@@ -2285,6 +2389,7 @@ $('btn-calc-xp-level').addEventListener('click', () => {
       );
     }
 
+    inicializarCatalogoInventario();
     $('btn-carregar-inv').addEventListener('click',  carregarInventario);
     $('btn-inv-adicionar').addEventListener('click', adicionarItemInventario);
 
