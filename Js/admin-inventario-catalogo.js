@@ -399,7 +399,7 @@
   },
   {
     "id": "pesca-achados",
-    "label": "🐟 Pesca · Peixes e achados (76)",
+    "label": "🐟 Pesca · Peixes e achados (176)",
     "itens": [
       {
         "key": "ampulheta",
@@ -704,6 +704,406 @@
       {
         "key": "pneu_velho",
         "nome": "🛞 Pneu Velho"
+      },
+      {
+        "key": "tilapia_juvenil",
+        "nome": "🐟 Tilápia Juvenil"
+      },
+      {
+        "key": "lambari_prateado",
+        "nome": "🐠 Lambari Prateado"
+      },
+      {
+        "key": "acara_listrado",
+        "nome": "🐟 Acará-Listrado"
+      },
+      {
+        "key": "cascudo_pequeno",
+        "nome": "🪨 Cascudo Pequeno"
+      },
+      {
+        "key": "curimata",
+        "nome": "🐟 Curimatã"
+      },
+      {
+        "key": "piaba",
+        "nome": "🐟 Piaba de Rio"
+      },
+      {
+        "key": "manjuba",
+        "nome": "🐟 Manjuba"
+      },
+      {
+        "key": "jundia",
+        "nome": "🐟 Jundiá"
+      },
+      {
+        "key": "carpa_comum",
+        "nome": "🐟 Carpa Comum"
+      },
+      {
+        "key": "pacu_juvenil",
+        "nome": "🐟 Pacu Juvenil"
+      },
+      {
+        "key": "tambaqui_juvenil",
+        "nome": "🐟 Tambaqui Juvenil"
+      },
+      {
+        "key": "piau",
+        "nome": "🐟 Piau"
+      },
+      {
+        "key": "saicanga",
+        "nome": "🦷 Saicanga"
+      },
+      {
+        "key": "peixe_folha",
+        "nome": "🍃 Peixe-Folha"
+      },
+      {
+        "key": "peixe_pedra",
+        "nome": "🪨 Peixe-Pedra"
+      },
+      {
+        "key": "camarao_rio",
+        "nome": "🦐 Camarão de Rio"
+      },
+      {
+        "key": "caranguejo_mirim",
+        "nome": "🦀 Caranguejo-Mirim"
+      },
+      {
+        "key": "siri_pequeno",
+        "nome": "🦀 Siri Pequeno"
+      },
+      {
+        "key": "caramujo_agua_doce",
+        "nome": "🐌 Caramujo de Água Doce"
+      },
+      {
+        "key": "mexilhao_pequeno",
+        "nome": "🐚 Mexilhão Pequeno"
+      },
+      {
+        "key": "concha_rosa",
+        "nome": "🐚 Concha Rosa"
+      },
+      {
+        "key": "estrela_pequena",
+        "nome": "⭐ Estrela-do-Mar Pequena"
+      },
+      {
+        "key": "ourico_marinho",
+        "nome": "🦔 Ouriço-do-Mar"
+      },
+      {
+        "key": "madeira_flutuante",
+        "nome": "🪵 Madeira Flutuante"
+      },
+      {
+        "key": "folha_dourada",
+        "nome": "🍂 Folha Dourada"
+      },
+      {
+        "key": "pena_azul",
+        "nome": "🪶 Pena Azul"
+      },
+      {
+        "key": "vidro_polido",
+        "nome": "🧊 Vidro Polido pelo Mar"
+      },
+      {
+        "key": "peixe_rajado",
+        "nome": "🐠 Peixe-Rajado"
+      },
+      {
+        "key": "cascudinho",
+        "nome": "🐟 Cascudinho"
+      },
+      {
+        "key": "peixe_barrigudo",
+        "nome": "🐡 Peixe-Barrigudo"
+      },
+      {
+        "key": "peixe_borboleta",
+        "nome": "🦋 Peixe-Borboleta"
+      },
+      {
+        "key": "robalo_jovem",
+        "nome": "🐟 Robalo Jovem"
+      },
+      {
+        "key": "dourada_prateada",
+        "nome": "🐠 Dourada Prateada"
+      },
+      {
+        "key": "linguado",
+        "nome": "🐟 Linguado"
+      },
+      {
+        "key": "cavala",
+        "nome": "🐟 Cavala"
+      },
+      {
+        "key": "anchova",
+        "nome": "🐟 Anchova"
+      },
+      {
+        "key": "tainha",
+        "nome": "🐟 Tainha"
+      },
+      {
+        "key": "garoupa_jovem",
+        "nome": "🐟 Garoupa Jovem"
+      },
+      {
+        "key": "lula_prateada",
+        "nome": "🦑 Lula Prateada"
+      },
+      {
+        "key": "polvo_miniatura",
+        "nome": "🐙 Polvo em Miniatura"
+      },
+      {
+        "key": "lagosta_pedra",
+        "nome": "🦞 Lagosta-das-Pedras"
+      },
+      {
+        "key": "camarao_tigre",
+        "nome": "🦐 Camarão-Tigre"
+      },
+      {
+        "key": "caracol_perolado",
+        "nome": "🐚 Caracol Perolado"
+      },
+      {
+        "key": "ostra_pequena",
+        "nome": "🦪 Ostra Pequena"
+      },
+      {
+        "key": "buzio_listrado",
+        "nome": "🐚 Búzio Listrado"
+      },
+      {
+        "key": "concha_perolada",
+        "nome": "🐚 Concha Perolada"
+      },
+      {
+        "key": "coral_rosa",
+        "nome": "🪸 Coral Rosa"
+      },
+      {
+        "key": "chave_submersa",
+        "nome": "🗝️ Chave Submersa"
+      },
+      {
+        "key": "medalhao_metal",
+        "nome": "🏅 Medalhão de Metal"
+      },
+      {
+        "key": "pulseira_prata",
+        "nome": "📿 Pulseira de Prata"
+      },
+      {
+        "key": "moeda_prateada",
+        "nome": "🪙 Moeda Prateada"
+      },
+      {
+        "key": "mapa_fragmentado",
+        "nome": "🗺️ Fragmento de Mapa"
+      },
+      {
+        "key": "frasco_vidro_azul",
+        "nome": "🧪 Frasco de Vidro Azul"
+      },
+      {
+        "key": "relogio_parado",
+        "nome": "⌚ Relógio Parado"
+      },
+      {
+        "key": "broche_antigo",
+        "nome": "📌 Broche Antigo"
+      },
+      {
+        "key": "peixe_serra",
+        "nome": "🦈 Peixe-Serra"
+      },
+      {
+        "key": "peixe_agulhao",
+        "nome": "🐟 Peixe-Agulhão"
+      },
+      {
+        "key": "peixe_mandarim",
+        "nome": "🐠 Peixe-Mandarim"
+      },
+      {
+        "key": "peixe_leao",
+        "nome": "🦁 Peixe-Leão"
+      },
+      {
+        "key": "peixe_martelo_jovem",
+        "nome": "🔨 Tubarão-Martelo Jovem"
+      },
+      {
+        "key": "peixe_napoleao",
+        "nome": "🐟 Peixe-Napoleão"
+      },
+      {
+        "key": "cavalo_marinho_raro",
+        "nome": "🦄 Cavalo-Marinho Raro"
+      },
+      {
+        "key": "polvo_anel_azul",
+        "nome": "🔵 Polvo-de-Anéis-Azuis"
+      },
+      {
+        "key": "lula_gigante_jovem",
+        "nome": "🦑 Lula-Gigante Jovem"
+      },
+      {
+        "key": "lagosta_azul",
+        "nome": "🦞 Lagosta Azul"
+      },
+      {
+        "key": "caranguejo_real",
+        "nome": "🦀 Caranguejo-Real"
+      },
+      {
+        "key": "manta_pintada",
+        "nome": "🌊 Manta Pintada"
+      },
+      {
+        "key": "peixe_eletrico_azul",
+        "nome": "⚡ Peixe Elétrico Azul"
+      },
+      {
+        "key": "arraia_manchada",
+        "nome": "🐟 Arraia-Manchada"
+      },
+      {
+        "key": "perola_negra",
+        "nome": "⚫ Pérola Negra"
+      },
+      {
+        "key": "colar_corais",
+        "nome": "📿 Colar de Corais"
+      },
+      {
+        "key": "bussola_navegante",
+        "nome": "🧭 Bússola de Navegação"
+      },
+      {
+        "key": "relicario_naufragio",
+        "nome": "📿 Relicário de Naufrágio"
+      },
+      {
+        "key": "caixa_moedas",
+        "nome": "🪙 Caixa de Moedas Antigas"
+      },
+      {
+        "key": "peixe_fita",
+        "nome": "🎗️ Peixe-Fita"
+      },
+      {
+        "key": "peixe_fenix_aquatico",
+        "nome": "🔥 Peixe-Fênix Aquático"
+      },
+      {
+        "key": "peixe_cristalino",
+        "nome": "💎 Peixe Cristalino"
+      },
+      {
+        "key": "tubarao_lua",
+        "nome": "🌙 Tubarão-Lua"
+      },
+      {
+        "key": "raia_fantasma",
+        "nome": "👻 Raia Fantasma"
+      },
+      {
+        "key": "serpente_marinha_jovem",
+        "nome": "🐉 Serpente Marinha Jovem"
+      },
+      {
+        "key": "polvo_rubi",
+        "nome": "🔴 Polvo de Rubi"
+      },
+      {
+        "key": "lula_abissal",
+        "nome": "🌌 Lula Abissal"
+      },
+      {
+        "key": "cavalo_marinho_dourado",
+        "nome": "🐴 Cavalo-Marinho Dourado"
+      },
+      {
+        "key": "baleia_celeste",
+        "nome": "🌠 Baleia Celeste"
+      },
+      {
+        "key": "tesouro_coracao_oceano",
+        "nome": "💙 Coração do Oceano"
+      },
+      {
+        "key": "ancora_prateada",
+        "nome": "⚓ Âncora Prateada"
+      },
+      {
+        "key": "coroa_escamas",
+        "nome": "👑 Coroa de Escamas"
+      },
+      {
+        "key": "cetro_marinheiro",
+        "nome": "🔱 Cetro do Marinheiro"
+      },
+      {
+        "key": "mapa_atlantida",
+        "nome": "🗺️ Mapa de Atlântida"
+      },
+      {
+        "key": "diamante_marinho",
+        "nome": "💠 Diamante Marinho"
+      },
+      {
+        "key": "peixe_sol_dourado",
+        "nome": "☀️ Peixe-Sol Dourado"
+      },
+      {
+        "key": "leviata_ancestral",
+        "nome": "🐋 Leviatã Ancestral"
+      },
+      {
+        "key": "dragao_marinho_ancestral",
+        "nome": "🐉 Dragão Marinho Ancestral"
+      },
+      {
+        "key": "kraken_ancestral",
+        "nome": "🐙 Kraken Ancestral"
+      },
+      {
+        "key": "fenix_marinha",
+        "nome": "🔥 Fênix Marinha"
+      },
+      {
+        "key": "baleia_estelar",
+        "nome": "🌌 Baleia Estelar"
+      },
+      {
+        "key": "perola_cosmica",
+        "nome": "✨ Pérola Cósmica"
+      },
+      {
+        "key": "tridente_tritao",
+        "nome": "🔱 Tridente de Tritão"
+      },
+      {
+        "key": "coroa_atlantida",
+        "nome": "👑 Coroa de Atlântida"
+      },
+      {
+        "key": "coracao_tita_oceano",
+        "nome": "💎 Coração Titã do Oceano"
       }
     ]
   },

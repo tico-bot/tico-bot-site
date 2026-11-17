@@ -1906,6 +1906,7 @@ const titulosAbas  = {
         : '<option value="">Nenhum grupo</option>';
       selectLevel.innerHTML = optGruposStr;
       selectInv.innerHTML   = optGruposStr;
+      selectInv.add(new Option('🌐 Inventário global (todos os grupos)', 'global'));
 
       // Limpa estado anterior
       $('usr-level-novo').value    = '';
@@ -2211,28 +2212,28 @@ $('btn-calc-xp-level').addEventListener('click', () => {
     let invAtual = [];
 
     async function carregarInventario() {
-  if (!usuarioAtual) { toast('Nenhum usuário selecionado.', 'erro'); return; }
-  const jid = $('usr-inv-grupo').value;
-  if (!jid) { toast('Selecione um grupo.', 'erro'); return; }
+      if (!usuarioAtual) { toast('Nenhum usuário selecionado.', 'erro'); return; }
+      const jid = $('usr-inv-grupo').value;
+      if (!jid) { toast('Selecione um grupo ou o inventário global.', 'erro'); return; }
 
-  const listaEl = $('usr-inv-lista');
-  listaEl.innerHTML = '<div class="inv-vazio"><div class="spinner" style="width:16px;height:16px;display:inline-block;vertical-align:middle;margin-right:.4rem;border-width:2px;"></div> Carregando...</div>';
-  listaEl.classList.remove('hidden');
+      const listaEl = $('usr-inv-lista');
+      listaEl.innerHTML = '<div class="inv-vazio"><div class="spinner" style="width:16px;height:16px;display:inline-block;vertical-align:middle;margin-right:.4rem;border-width:2px;"></div> Carregando...</div>';
+      listaEl.classList.remove('hidden');
 
-  try {
-    const res = await fetch(
-      `${API}/admin/usuario/${encodeURIComponent(usuarioAtual.idWhatsApp)}/inventario?idGrupo=${encodeURIComponent(jid)}`,
-      { headers: adminHeaders() }
-    );
-    if (!res.ok) throw new Error();
-    const { inventario } = await res.json();
-    invAtual = Array.isArray(inventario) ? inventario : [];
-    renderInventario(invAtual, jid);
-  } catch {
-    invAtual = [];
-    listaEl.innerHTML = '<div class="estado-erro" style="font-size:.8rem;padding:.5rem .75rem;">Erro ao carregar inventário.</div>';
-  }
-}
+      try {
+        const res = await fetch(
+          `${API}/admin/usuario/${encodeURIComponent(usuarioAtual.idWhatsApp)}/inventario?idGrupo=${encodeURIComponent(jid)}`,
+          { headers: adminHeaders() }
+        );
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || `Falha HTTP ${res.status}.`);
+        invAtual = Array.isArray(data.inventario) ? data.inventario : [];
+        renderInventario(invAtual, jid);
+      } catch (error) {
+        invAtual = [];
+        listaEl.innerHTML = `<div class="estado-erro" style="font-size:.8rem;padding:.5rem .75rem;">${escapeHtml(error.message || 'Erro ao carregar inventário.')}</div>`;
+      }
+    }
 
     function renderInventario(inv, jid) {
       const listaEl = $('usr-inv-lista');
@@ -2241,48 +2242,61 @@ $('btn-calc-xp-level').addEventListener('click', () => {
         return;
       }
       listaEl.innerHTML = inv.map(item => {
-        const nomeItem = item.nome || item.item || item.id || '?';
-        const qtdRaw   = Number(item.quantidade ?? item.qty ?? 1);
-        const qtd      = Number.isFinite(qtdRaw) ? Math.max(0, Math.floor(qtdRaw)) : 1;
+        const nomeItem = item.nome || item.item || item.key || '?';
+        const chave = item.key || item.item || item.nome || '';
+        const area = item.area || '__legado__';
+        const escopo = item.escopo === 'global' ? 'global' : 'grupo';
+        const qtdRaw = Number(item.quantidade ?? item.qty ?? 1);
+        const qtd = Number.isFinite(qtdRaw) ? Math.max(0, Math.floor(qtdRaw)) : 1;
+        const etiqueta = escopo === 'global' ? '🌐 Global' : '👥 Grupo';
         return `
         <div class="inv-item">
           <span class="inv-item-nome">${escapeHtml(nomeItem)}</span>
           <span class="inv-item-qtd">x${formatNum(qtd)}</span>
+          <span class="inv-item-qtd" title="${etiqueta}">${etiqueta}</span>
           <button class="btn-inv-rem" data-action="inv-remover"
-            data-item="${escapeHtml(nomeItem)}"
+            data-item="${escapeHtml(chave)}"
+            data-area="${escapeHtml(area)}"
+            data-scope="${escopo}"
             data-jid="${escapeHtml(jid)}">✕ Remover</button>
         </div>`;
       }).join('');
 
       listaEl.querySelectorAll('button[data-action="inv-remover"]').forEach(btn => {
         btn.addEventListener('click', () => {
-          const nomeItem = btn.dataset.item;
+          const nomeItem = btn.parentElement.querySelector('.inv-item-nome')?.textContent || btn.dataset.item;
           const jidGrupo = btn.dataset.jid;
-          const nomeU    = usuarioAtual.nome || usuarioAtual.idWhatsApp;
+          const escopo = btn.dataset.scope;
+          const nomeDestino = escopo === 'global' ? 'inventário global' : nomeGrupoPorJid(jidGrupo);
           abrirModal(
             'Remover item',
-            `Remover "${nomeItem}" do inventário de ${nomeU}?`,
-            () => removerItemInventario(jidGrupo, nomeItem)
+            `Remover "${nomeItem}" do ${nomeDestino}?`,
+            () => removerItemInventario(jidGrupo, btn.dataset.item, btn.dataset.area, escopo)
           );
         });
       });
     }
 
-    async function removerItemInventario(jid, nomeItem) {
+    async function removerItemInventario(jid, itemKey, area, escopo) {
       try {
         const res = await fetch(
           `${API}/admin/usuario/${encodeURIComponent(usuarioAtual.idWhatsApp)}/inventario`,
           {
             method: 'DELETE',
             headers: adminHeaders(),
-            body: JSON.stringify({ idGrupo: jid, item: nomeItem })
+            body: JSON.stringify({
+              idGrupo: escopo === 'global' ? 'global' : jid,
+              item: itemKey,
+              area,
+            })
           }
         );
-        if (!res.ok) throw new Error();
-        toast(`✅ Item "${nomeItem}" removido.`);
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || `Falha HTTP ${res.status}.`);
+        toast('✅ Item removido do inventário.');
         await carregarInventario();
-      } catch {
-        toast('Erro ao remover item.', 'erro');
+      } catch (error) {
+        toast(error.message || 'Erro ao remover item.', 'erro');
       }
     }
 
@@ -2324,7 +2338,7 @@ $('btn-calc-xp-level').addEventListener('click', () => {
           itemEl.replaceChildren(new Option('Item personalizado', ''));
           itemEl.disabled = true;
         }
-        if (hint) hint.textContent = 'Use esta opção apenas para um item que não exista nos catálogos do Tico.';
+        if (hint) hint.textContent = 'Item personalizado será guardado no inventário global do usuário. Use esta opção apenas se ele não existir nos catálogos do Tico.';
         return;
       }
 
@@ -2332,7 +2346,7 @@ $('btn-calc-xp-level').addEventListener('click', () => {
       if (itemEl) {
         itemEl.replaceChildren(new Option(area ? 'Selecione um item...' : 'Escolha uma área primeiro...', ''));
         for (const item of (area?.itens || [])) {
-          itemEl.add(new Option(item.nome, item.nome));
+          itemEl.add(new Option(item.nome, item.key));
         }
         itemEl.disabled = !area || !area.itens?.length;
       }
@@ -2344,37 +2358,73 @@ $('btn-calc-xp-level').addEventListener('click', () => {
     }
 
     async function adicionarItemInventario() {
-      if (!usuarioAtual) return;
-      const jid = $('usr-inv-grupo').value;
+      if (!usuarioAtual) { toast('Nenhum usuário selecionado.', 'erro'); return; }
+      const jidSelecionado = $('usr-inv-grupo').value;
       const areaId = $('usr-inv-item-area')?.value;
-      const nomeItem = areaId === '__personalizado__'
+      const itemKeySelecionado = areaId === '__personalizado__'
         ? $('usr-inv-item-personalizado')?.value.trim()
         : $('usr-inv-item-nome')?.value.trim();
-      const qtd = parseInt($('usr-inv-item-qtd').value, 10);
+      const qtd = Number($('usr-inv-item-qtd').value);
 
-      if (!jid)            { toast('Selecione um grupo.', 'erro'); return; }
-      if (!areaId)         { toast('Selecione a área do item.', 'erro'); return; }
-      if (!nomeItem)       { toast(areaId === '__personalizado__' ? 'Digite o nome do item.' : 'Selecione um item do catálogo.', 'erro'); return; }
-      if (!qtd || qtd < 1) { toast('Digite uma quantidade válida (mín. 1).', 'erro'); return; }
+      if (!jidSelecionado) { toast('Selecione um grupo ou o inventário global.', 'erro'); return; }
+      if (!areaId) { toast('Selecione a área do item.', 'erro'); return; }
+      if (!itemKeySelecionado) {
+        toast(areaId === '__personalizado__' ? 'Digite o nome do item.' : 'Selecione um item do catálogo.', 'erro');
+        return;
+      }
+      if (!Number.isSafeInteger(qtd) || qtd < 1 || qtd > 1000000) {
+        toast('Digite uma quantidade inteira entre 1 e 1000000.', 'erro');
+        return;
+      }
 
+      const area = (window.TICO_ADMIN_ITEM_CATALOG || []).find(item => item.id === areaId);
+      const itemCatalogo = area?.itens?.find(item => item.key === itemKeySelecionado);
+      const nomeItem = areaId === '__personalizado__'
+        ? itemKeySelecionado
+        : (itemCatalogo?.nome || itemKeySelecionado);
+      if (areaId !== '__personalizado__' && !itemCatalogo) {
+        toast('O item selecionado não pertence a esta área. Escolha-o novamente.', 'erro');
+        return;
+      }
+
+      const areasGlobais = new Set([
+        'loja-comida', 'loja-especial', 'loja-casal', 'loja-estilo', 'loja-tec',
+        'casal-equipaveis', '__personalizado__',
+      ]);
+      const eGlobal = areasGlobais.has(areaId);
+      if (!eGlobal && jidSelecionado === 'global') {
+        toast('Este item pertence ao inventário de um grupo. Selecione o grupo antes de adicionar.', 'erro');
+        return;
+      }
+      const idGrupo = eGlobal ? 'global' : jidSelecionado;
       const nomeU = usuarioAtual.nome || usuarioAtual.idWhatsApp;
-      const nomeG = $('usr-inv-grupo').selectedOptions[0]?.text || jid;
+      const nomeG = eGlobal ? 'Inventário global' : ($('usr-inv-grupo').selectedOptions[0]?.text || jidSelecionado);
+      const botao = $('btn-inv-adicionar');
 
       abrirModal(
         'Adicionar item',
         `Adicionar ${qtd}x "${nomeItem}" ao inventário de ${nomeU} em "${nomeG}"?`,
         async () => {
+          if (botao.disabled) return;
+          botao.disabled = true;
           try {
             const res = await fetch(
               `${API}/admin/usuario/${encodeURIComponent(usuarioAtual.idWhatsApp)}/inventario`,
               {
                 method: 'POST',
                 headers: adminHeaders(),
-                body: JSON.stringify({ idGrupo: jid, item: nomeItem, quantidade: qtd })
+                body: JSON.stringify({
+                  idGrupo,
+                  area: areaId,
+                  item: itemKeySelecionado,
+                  nome: nomeItem,
+                  quantidade: qtd,
+                })
               }
             );
-            if (!res.ok) throw new Error();
-            toast('✅ Item adicionado ao inventário.');
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) throw new Error(data.error || `Falha HTTP ${res.status}.`);
+            toast(`✅ ${qtd}x ${nomeItem} adicionado ao ${eGlobal ? 'inventário global' : 'inventário do grupo'}.`);
             if (areaId === '__personalizado__') {
               $('usr-inv-item-personalizado').value = '';
             } else {
@@ -2382,8 +2432,10 @@ $('btn-calc-xp-level').addEventListener('click', () => {
             }
             $('usr-inv-item-qtd').value = '1';
             await carregarInventario();
-          } catch {
-            toast('Erro ao adicionar item.', 'erro');
+          } catch (error) {
+            toast(error.message || 'Erro ao adicionar item.', 'erro');
+          } finally {
+            botao.disabled = false;
           }
         }
       );
